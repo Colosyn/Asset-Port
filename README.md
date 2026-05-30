@@ -3,10 +3,13 @@
 An automated, pipeline-friendly batch importer and organizer for **Unreal Engine 5** using Python and Editor Utility Widgets. Stop importing meshes and textures one-by-one; AssetPort automates category routing, texture settings configuration, material instance generation, and mesh linkage in a single click.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Unreal Engine Version](https://img.shields.io/badge/Unreal%20Engine-5.4%20%7C%205.5%20%7C%205.6%20%7C%205.7%20%7C%205.8-blue)](https://www.unrealengine.com/)
+[![Unreal Engine Version](https://img.shields.io/badge/Unreal%20Engine-5.6%20Tested%20%7C%205.x%20Testing%20Soon-blue)](https://www.unrealengine.com/)
 [![Language: Python](https://img.shields.io/badge/Language-Python-green)](https://www.python.org/)
 
 ---
+## Demo
+
+[<img src="https://img.youtube.com/vi/Cm26pc_Ob-U/maxresdefault.jpg" width="800">](https://youtu.be/Cm26pc_Ob-U)
 
 ## Key Features
 
@@ -82,3 +85,11 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 ## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+## Roadmap
+
+Feature planning and upcoming development tracked on the [Project Board](https://github.com/Colosyn/Asset-Port/projects).
+
+## Contributing
+
+Have a feature idea or naming convention to propose? Join the conversation in [Discussions](https://github.com/Colosyn/Asset-Port/discussions).
