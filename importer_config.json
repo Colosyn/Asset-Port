@@ -1,0 +1,7 @@
+{
+    "parent_material": "/Game/Python/M_Master",
+    "auto_create_mi": true,
+    "auto_assign_to_mesh": true,
+    "replace_existing": false,
+    "organize_asset": true
+}
