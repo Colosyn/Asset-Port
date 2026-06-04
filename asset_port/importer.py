@@ -65,6 +65,15 @@ class AssetImporter():
             detect_group.append(detected_asset)
               
         imported_objects = unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
+        
+        for asset, task in zip(detect_group, tasks):
+            imported_objs = task.get_objects()
+            if not imported_objs:
+                continue
+            for obj in imported_objs:
+                current_path = obj.get_package().get_name()
+                if current_path != asset.ue_path:
+                    unreal.EditorAssetLibrary.rename_asset(current_path, asset.ue_path)
         group_asset = self.detector.group_assets(detect_group)
         
         for group in group_asset:

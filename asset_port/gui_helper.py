@@ -44,7 +44,7 @@ def on_import_clicked():
     
     category_dropdown = active_widget.get_editor_property("Category_Dropdown")
     category_str = category_dropdown.get_selected_option()
-    category = None if category_str == "None" else category_str
+    category = None if category_str in ("None", "Auto-Detect") else category_str
     
     if folder_path:
         importer = AssetImporter()

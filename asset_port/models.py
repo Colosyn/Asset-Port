@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Optional
 
 class AssetType(Enum):
     STATIC_MESH = "StaticMesh"
@@ -28,34 +29,34 @@ class DetectedAsset:
     source_path : str
     prefix : str
     base_name : str
-    suffix : str | None
+    suffix : Optional[str]
     asset_type : AssetType
-    texture_slot : TextureSlot | None
+    texture_slot : Optional[TextureSlot] 
     extension : str
-    category : str | None = None
-    ue_path : str | None = None
+    category : Optional[str] = None
+    ue_path : Optional[str]= None
     
 @dataclass
 class AssetGroup:
     base_name : str
-    mesh : DetectedAsset | None = None
+    mesh : Optional[DetectedAsset] = None
     texture_list : list[DetectedAsset] = field(default_factory=list)
-    category : str | None = None
-    folder_path : str | None = None
+    category : Optional[str] = None
+    folder_path : Optional[str] = None
     
 @dataclass
 class ImportResult:
     asset : DetectedAsset
     success : bool
-    ue_path : str | None = None
-    error : str | None = None
+    ue_path : Optional[str] = None
+    error : Optional[str] = None
     
 @dataclass
 class MaterialBuildResult:
     base_name : str   
-    mi_path : str | None = None
+    mi_path : Optional[str] = None
     texture_assigned : dict[str, str] = field(default_factory=dict)
-    mesh_linked : str | None = None
+    mesh_linked : Optional[str] = None
     success : bool = False
     errors : list[str] = field(default_factory=list)
     

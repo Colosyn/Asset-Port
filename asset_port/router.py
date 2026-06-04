@@ -1,11 +1,11 @@
 from pathlib import Path
 from asset_port.detector import AssetDetector
 from asset_port.models import DetectedAsset
-
+from typing import Optional
 class AssetRouter():
     
    
-    def get_folder_path(self, asset: DetectedAsset, category_override: str | None = None):
+    def get_folder_path(self, asset: DetectedAsset, category_override: Optional[str] = None):
         
         if category_override:
             category = category_override

@@ -3,7 +3,7 @@
 An automated, pipeline-friendly batch importer and organizer for **Unreal Engine 5** using Python and Editor Utility Widgets. Stop importing meshes and textures one-by-one; AssetPort automates category routing, texture settings configuration, material instance generation, and mesh linkage in a single click.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Unreal Engine Version](https://img.shields.io/badge/Unreal%20Engine-5.6%20Tested%20%7C%205.x%20Testing%20Soon-blue)](https://www.unrealengine.com/)
+[![Unreal Engine Version](https://img.shields.io/badge/Unreal%20Engine-5.3%2B%20Supported-blue)](https://www.unrealengine.com/)
 [![Language: Python](https://img.shields.io/badge/Language-Python-green)](https://www.python.org/)
 
 ---
@@ -81,6 +81,8 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 * **`replace_existing`**: If true, overwrites any existing Material Instances with the same name.
 
 ---
+## Documentation
+* [View Changelog](CHANGELOG.md)
 
 ## License
 
