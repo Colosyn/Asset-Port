@@ -40,6 +40,8 @@ SUFFIX_MAP ={
     
     "h" : TextureSlot.HEIGHT,
     "height" : TextureSlot.HEIGHT,
+    "disp" : TextureSlot.HEIGHT,
+    "displacement" : TextureSlot.HEIGHT,
     
     "orm" : TextureSlot.ORM,
 }

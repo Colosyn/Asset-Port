@@ -53,7 +53,7 @@ Suffixes determine how textures are mapped inside the created **Material Instanc
 | `_ao`, `_ambientocclusion` | **AmbientOcclusion** (AO) | `False` | `TC_Masks` |
 | `_e`, `_emissive` | **Emissive** | `True` | `TC_Default` |
 | `_o`, `_opacity` | **Opacity** | `False` | `TC_Alpha` |
-| `_h`, `_height` | **Height** | `False` | `TC_Masks` |
+| `_h`, `_height`, `_disp`, `_displacement`  | **Height** | `False` | `TC_Masks` |
 | `_orm` | **ORM** (Occlusion, Roughness, Metallic) | `False` | `TC_Masks` |
 
 ### Special Material Features:
