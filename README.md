@@ -59,6 +59,11 @@ To install AssetPort, place the script files and assets inside your Unreal Engin
 
 The importer relies on simple naming tags to automate paths and slots. For a full list of prefix tags (like `sm_`, `sk_`, `t_`) and texture suffixes (like `_BaseColor`, `_N`, `_ORM`), see [CONVENTIONS.md](CONVENTIONS.md).
 
+> [!TIP]
+> **Using a Custom Master Material?**
+> If you want to use your own Master Material, see the [Custom Master Material Setup Guide in CONVENTIONS.md](CONVENTIONS.md#4-custom-master-material-setup-guide) to ensure your texture parameters and static switches match the expected naming conventions. If any names do not match, they will be ignored without breaking the import pipeline.
+
+
 ---
 
 ## Configuration (`importer_config.json`)

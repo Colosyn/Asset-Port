@@ -58,3 +58,35 @@ Suffixes determine how textures are mapped inside the created **Material Instanc
 
 ### Special Material Features:
 * **ORM Textures:** If an `_orm` texture suffix is detected, the tool automatically turns on the static switch parameter **"UseORM"** in the material instance, allowing you to feed packed maps directly.
+
+---
+
+## 4. Custom Master Material Setup Guide
+
+If you configure a custom Master Material in `importer_config.json` via the `"parent_material"` property, your master material must use specific parameter names for AssetPort to correctly bind the scanned textures.
+
+### Required Texture Parameter Names
+
+Ensure your Master Material defines texture parameters matching these exact names (case-sensitive):
+
+| Texture Slot | Required Parameter Name | Description |
+| :--- | :--- | :--- |
+| Base Colour | `BaseColour` | The diffuse / albedo input |
+| Normal | `Normal` | The normal map input |
+| Roughness | `Roughness` | The roughness map input |
+| Metallic | `Metallic` | The metallic map input |
+| Ambient Occlusion | `AmbientOcclusion` | The AO map input |
+| Emissive | `Emissive` | The emissive map input |
+| Opacity | `Opacity` | The opacity / transparency input |
+| Height | `Height` | The height / displacement input |
+| ORM | `ORM` | The occlusion, roughness, and metallic packed input |
+
+### Static Switches
+
+* **`UseORM`**: If your custom Master Material supports packed ORM textures, name your static switch parameter `UseORM`. When an `_orm` texture is detected, AssetPort automatically sets this switch to `True` in the generated Material Instance.
+
+### Unmatched Suffixes and Parameters
+
+If a texture's suffix doesn't match any known slots, or if a slot is not found on your custom Master Material:
+* **Safe Fallback:** The assignment will be silently ignored.
+* **Pipeline Continues:** It will not raise an error or crash the import process. The mesh will still be imported, the material instance will be created, other matching parameters will be connected, and the material will be assigned to the mesh successfully.

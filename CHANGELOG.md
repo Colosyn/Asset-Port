@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.2] - 2026-06-08
+### Added
+- Added naming conventions guide for custom Master Materials.
+- Added tip in the main README referencing the custom Master Material setup.
+- Suffix support for displacement maps (`_disp` and `_displacement`).
+
 ## [1.0.1] - 2026-06-04
 ### Added
 - UE 5.3 compatibility support (making assets and Python backward-compatible).
