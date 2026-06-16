@@ -104,7 +104,7 @@ def on_preview_clicked():
         
         importer = AssetImporter()
         groups, report = importer.import_directory(folder_path, category, True)
-        
+        log_pipeline_report(report, folder_path, True)
         
         for group in groups:  
             display_folder = group.folder_path
@@ -128,6 +128,7 @@ def on_preview_clicked():
            
     if widget_blueprint:
         preview_widget = subsystem.spawn_and_register_tab(widget_blueprint)
+        
         
     if preview_widget:
         preview_import = preview_widget.get_editor_property("Conform_Import")
