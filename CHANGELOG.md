@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0] - 2026-06-16
+### Added
+- Added "Preview Mode" (Dry Run) button to the main importer panel.
+- Interactive, collapsible preview window (`EUW_AssetPort_Preview`) showing the proposed folder structure and clean asset tree (e.g., `SM_Door`, `T_Door_N`).
+- Direct **Confirm Import** and **Cancel** buttons within the preview window for an optimized workflow.
+- Native warning dialog window if a user attempts to run a preview without selecting a folder.
+- Auto-generation of a simulation report (`assetport_preview_report.txt`) saved to the source folder during dry runs.
+
 ## [1.0.2] - 2026-06-08
 ### Added
 - Added naming conventions guide for custom Master Materials.

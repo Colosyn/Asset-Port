@@ -16,7 +16,7 @@ class AssetImporter():
         self.config = config_loader()
         
         
-    def import_directory(self, source_dir, category):
+    def import_directory(self, source_dir, category, dry_run = False):
         report = PipelineReport()
         file_path = Path(source_dir)
         tasks = []
@@ -50,21 +50,21 @@ class AssetImporter():
                 report.warnings.extend(warnings)
             
             asset_name = asset.split("/")[-1]
+            if not dry_run:
+                task = unreal.AssetImportTask()  
+                task.filename = detected_asset.source_path
+                task.destination_path = folder
+                task.destination_name = asset_name
+                task.automated = True
+                task.save = True
             
-            task = unreal.AssetImportTask()  
-            task.filename = detected_asset.source_path
-            task.destination_path = folder
-            task.destination_name = asset_name
-            task.automated = True
-            task.save = True
+                if detected_asset.asset_type  in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
+                    task.options = get_mesh_setting(detected_asset)
             
-            if detected_asset.asset_type  in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
-                task.options = get_mesh_setting(detected_asset)
-            
-            tasks.append(task) 
+                tasks.append(task) 
             detect_group.append(detected_asset)
-              
-        imported_objects = unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
+        if not dry_run:      
+            imported_objects = unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
         
         for asset, task in zip(detect_group, tasks):
             imported_objs = task.get_objects()
@@ -86,7 +86,14 @@ class AssetImporter():
                     report.warnings.extend(group_warnings)
                            
         report.groups_found = len(group_asset)
+        if dry_run:
+            report.asset_import = len(detect_group)
+            if self.config.auto_create_mi:
+                report.mis_created = len(group_asset)
+                report.mis_linked = sum(1 for g in group_asset if g.mesh is not None)
         
+            return group_asset, report    
+            
         total_steps = len(detect_group) + (len(group_asset) if self.config.auto_create_mi else 0)
         
         with unreal.ScopedSlowTask(total_steps, "Processing Imported assets...") as slow_task:
