@@ -93,13 +93,18 @@ def on_preview_clicked():
         
         
         for group in groups:  
+            display_folder = group.folder_path
+            if display_folder.startswith("/Game/"):
+                display_folder = display_folder[6:]
             if group.mesh is not None:
-                import_asset_name.append(f"{group.folder_path}|Mesh : {group.base_name}")
+                mesh_name = group.mesh.ue_path.split("/")[-1]
+                import_asset_name.append(f"{display_folder}|{mesh_name}")
             for texture in group.texture_list:
-                import_asset_name.append(f"{group.folder_path}|texture({texture.texture_slot.value}) : {texture.base_name}")
+                texture_name = texture.ue_path.split("/")[-1]
+                import_asset_name.append(f"{display_folder}|{texture_name}")
         
             if config.auto_create_mi:
-                import_asset_name.append(f"{group.folder_path}|Material : MI_{group.base_name}")   
+                import_asset_name.append(f"{display_folder}|MI_{group.base_name}")   
                 
         for warning in report.warnings:
             failed_asset_name.append(warning)
