@@ -92,7 +92,7 @@ def on_preview_clicked():
         groups, report = importer.import_directory(folder_path, category, True)
         
         
-        for group in groups:
+        for group in groups:  
             if group.mesh is not None:
                 import_asset_name.append(f"{group.folder_path}|Mesh : {group.base_name}")
             for texture in group.texture_list:
