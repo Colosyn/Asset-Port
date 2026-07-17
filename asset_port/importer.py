@@ -3,7 +3,7 @@ from pathlib import Path
 from asset_port.detector import AssetDetector
 from asset_port.router import AssetRouter
 from asset_port.presets import get_mesh_setting, texture_settings
-from asset_port.models import AssetType, PipelineReport
+from asset_port.models import AssetType, PipelineReport, TextureSlot
 from asset_port.Validator import asset_validator, group_validator
 from asset_port.config import config_loader
 from asset_port.materials import create_material_instance
@@ -111,6 +111,10 @@ class AssetImporter():
                         continue
                     for obj in imported_object:
                         texture_settings(obj, asset.texture_slot)
+                        
+                        if asset.texture_slot == TextureSlot.BASE_COLOUR:
+                            asset.has_alpha = obj.get_editor_property("has_alpha_channel")
+                            
                         unreal.EditorAssetLibrary.save_loaded_asset(obj)
                     
             if self.config.auto_create_mi:
