@@ -38,6 +38,9 @@ SUFFIX_MAP ={
     "o" : TextureSlot.OPACITY,
     "opacity" : TextureSlot.OPACITY,
     
+    "mask" : TextureSlot.OPACITY_MASK,
+    "opacitymask" : TextureSlot.OPACITY_MASK,
+    
     "h" : TextureSlot.HEIGHT,
     "height" : TextureSlot.HEIGHT,
     "disp" : TextureSlot.HEIGHT,

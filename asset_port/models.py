@@ -18,6 +18,7 @@ class TextureSlot(Enum):
     AO = "AmbientOcclusion"
     EMISSIVE = "Emissive"
     OPACITY = "Opacity"
+    OPACITY_MASK = "OpacityMask"
     ORM = "ORM"
     HEIGHT = "Height"
     UNKNOWN = "Unknown"
