@@ -4,12 +4,92 @@ from tkinter import filedialog
 from asset_port.importer import AssetImporter
 from asset_port.logger import log_pipeline_report
 from asset_port.config import config_loader
+from asset_port.models import TextureSlot
 active_widget = None
 preview_widget = None
 last_folder_path = ""
 last_category = None
 TAB_ID = unreal.Name("/Game/Python/Widgets/EUW_AssetPort.EUW_AssetPort_ActiveTab")
 PREIVEW_ID = unreal.Name("/Game/Python/Widgets/EUW_AssetPort_Preview.EUW_AssetPort_Preview_ActiveTab")
+TRANSPARENCY_ID = unreal.Name("/Game/Python/Widgets/EUW_TransparencySetup.EUW_TransparencySetup_ActiveTab")
+
+def scan_for_transparency(groups):
+    items = []
+    for group in groups:
+        has_mask = any(t.texture_slot == TextureSlot.OPACITY_MASK for t in group.texture_list)
+        
+        has_opacity = any(t.texture_slot == TextureSlot.OPACITY for t in group.texture_list)
+        
+        base_colour = next((t for t in group.texture_list if t.texture_slot == TextureSlot.BASE_COLOUR), None)
+        has_alpha = base_colour.has_alpha if base_colour else False
+        
+        if has_mask:
+            items.append((group, "Masked"))
+        elif has_opacity:
+            items.append((group, "Translucent"))
+        elif has_alpha:
+            items.append((group,"Masked"))
+            
+    return items
+    
+def show_transparency_popup(items, on_confirm_callback):
+    
+    subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
+    transparency_widget = unreal.load_asset("/Game/Python/Widgets/EUW_TransparencySetup")
+    
+    if not transparency_widget:
+        on_confirm_callback([])
+        return
+    
+    widget = subsystem.spawn_and_register_tab(transparency_widget)
+    if widget:
+        name = [f"MI_{item[0].base_name}" for item in items]
+        default = [item[1] for item in items]
+        
+        widget.set_editor_property("MaterialNames", name)
+        widget.set_editor_property("DefaultModes", default)
+        widget.call_method("PopulateTransparencyList")
+        
+        confirm_btn = widget.get_editor_property("Confirm_Button")
+        cancel_btn = widget.get_editor_property("Cancel_Button")
+        
+        def on_confirm():
+            scroll_box = widget.get_editor_property("Transparency_ScrollBox")
+            rows = scroll_box.get_children()
+            
+            decisions = {}
+            for (group,_), row in zip(items, rows):
+                combo = row.get_editor_property("ComboBox_BlendMode")
+                mode = combo.get_selected_option()
+                decisions[group.base_name] = mode
+                
+            subsystem.close_tab_by_id(TRANSPARENCY_ID)
+            on_confirm_callback(decisions)
+            
+        def on_cancil():
+            subsystem.close_tab_by_id(TRANSPARENCY_ID)
+            on_confirm_callback({})
+            
+        confirm_btn.on_clicked.add_callable(on_confirm)
+        cancel_btn.on_clicked.add_callable(on_cancil)
+        
+def execute_import_pipeline(folder_path, category):
+    importer = AssetImporter()
+    
+    groups , report = importer.import_directory(folder_path, category, dry_run=False)
+    
+    items = scan_for_transparency(groups)
+    
+    def complete_build(decisions):
+        importer.build_materials(groups,decisions, report)
+        log_pipeline_report(report, folder_path)
+        
+    if items:
+        show_transparency_popup(items, complete_build)
+        
+    else:
+        complete_build({})
+
 def run_importer():
     global active_widget
     subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
@@ -56,11 +136,9 @@ def on_import_clicked():
     category = None if category_str in ("None", "Auto-Detect") else category_str
     
     if folder_path:
-        importer = AssetImporter()
-        group, report = importer.import_directory(folder_path, category)
-        log_pipeline_report(report, folder_path)
+        execute_import_pipeline(folder_path, category)
         
-    on_cancel_clicked()
+        on_cancel_clicked()
     
     
 def on_cancel_clicked():
@@ -148,11 +226,7 @@ def  on_preview_import_clicked():
     global last_folder_path, last_category
     
     if last_folder_path:
-        
-        importer = AssetImporter()
-        group , report = importer.import_directory(last_folder_path,last_category, False)
-        
-        log_pipeline_report(report, last_folder_path)
+        execute_import_pipeline(last_folder_path,last_category)
         
     on_preview_cancel_clicked()
     

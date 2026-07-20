@@ -15,6 +15,14 @@ class AssetImporter():
         self.detector = AssetDetector()
         self.config = config_loader()
         
+    def build_materials(self, group_asset, decisions=None, report= None):
+        for group in group_asset:
+            mode = decisions.get(group.base_name, "Opaque") if decisions else "Opaque"
+            mi_report = create_material_instance(group, self.config, mode)
+            if report and mi_report.success:
+                report.mis_created += 1
+                if mi_report.mesh_linked:
+                    report.mis_linked += 1
         
     def import_directory(self, source_dir, category, dry_run = False):
         report = PipelineReport()
@@ -117,18 +125,7 @@ class AssetImporter():
                             
                         unreal.EditorAssetLibrary.save_loaded_asset(obj)
                     
-            if self.config.auto_create_mi:
-                for group in group_asset:
-                    if slow_task.should_cancel():
-                        break
-                
-                    slow_task.enter_progress_frame(1, f"Building material: MI_{group.base_name}")
-                    mi_report = create_material_instance(group, self.config)
-                    if mi_report.success:    
-                        report.mis_created += 1
-                        if mi_report.mesh_linked:
-                            report.mis_linked += 1
-        
+           
         successful_imports = 0
         for task in tasks:
             if len(task.get_objects()) >0:
