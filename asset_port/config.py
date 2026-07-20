@@ -4,7 +4,9 @@ from pathlib import Path
 @dataclass
 
 class ImporterSettings():
-    parent_material : str ="/Game/Python/M_Master"
+    parent_material_opaque : str ="/Game/Python/Materials/M_Master_Opaque"
+    parent_material_masked : str ="/Game/Python/Materials/M_Master_Masked"
+    parent_material_translucent : str = "/Game/Python/Materials/M_Master_Translucent"
     auto_create_mi : bool = True
     auto_assign_to_mesh : bool = True
     replace_existing : bool = False

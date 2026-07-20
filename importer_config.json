@@ -1,5 +1,7 @@
 {
-    "parent_material": "/Game/Python/M_Master",
+    "parent_material_opaque": "/Game/Python/Materials/M_Master_Opaque",
+    "parent_material_masked": "/Game/Python/Materials/M_Master_Masked",
+    "parent_material_translucent": "/Game/Python/Materials/M_Master_translucent",
     "auto_create_mi": true,
     "auto_assign_to_mesh": true,
     "replace_existing": false,
