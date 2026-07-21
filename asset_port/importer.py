@@ -3,10 +3,63 @@ from pathlib import Path
 from asset_port.detector import AssetDetector
 from asset_port.router import AssetRouter
 from asset_port.presets import get_mesh_setting, texture_settings
-from asset_port.models import AssetType, PipelineReport
+from asset_port.models import AssetType, PipelineReport, TextureSlot
 from asset_port.Validator import asset_validator, group_validator
 from asset_port.config import config_loader
 from asset_port.materials import create_material_instance
+
+def check_source_has_alpha(file_path):
+    if not file_path:
+        return False
+    try:
+        ext = file_path.lower()
+        if ext.endswith((".jpg",".jpeg",".bmp")):
+            return False
+        
+        with open(file_path, "rb") as f:
+            header = f.read(30)
+            
+            if ext.endswith(".png") and header.startswith(b"\x89PNG\r\n\x1a\n"):
+                color_type = header[25]
+                if color_type in (4,6):
+                    return True
+                
+                f.seek(0)
+                data = f.read(65536)
+                if b"IDAT" in data:
+                    data = data[:data.index(b"IDAT")]
+                return b"tRNS" in data
+            
+            elif ext.endswith(".tga") and len(header) >= 18:
+                descriptor = header[17]
+                return (descriptor & 0x0F) > 0
+            
+            elif ext.endswith(".exr") and header.startswith(b"\x76\x2f\x31\x01"):
+                f.seek(8)
+                data = f.read(65536)
+                idx = data.find(b"channels\x00")
+                if idx == -1:
+                    return False
+                pos = idx + len(b"channels\x00")
+                if data[pos:pos+7] != b"chlist\x00":
+                    return False
+                pos +=7
+                size = int.from_bytes(data[pos:pos+7], "little")
+                pos += 4
+                end = pos = size
+                while pos < end:
+                    name_end = data.find(b"\x00", pos)
+                    if name_end == -1 or name_end == pos:
+                        break
+                    name = data[pos:name_end].decode("ascii", errors="ignore")
+                    if name in ("A","a","Alpha", "ALPHA"):
+                        return True
+                    pos = name_end +1 +16
+                
+                return False
+    except Exception:
+        pass
+    return False
 
 class AssetImporter():
     
@@ -15,6 +68,14 @@ class AssetImporter():
         self.detector = AssetDetector()
         self.config = config_loader()
         
+    def build_materials(self, group_asset, decisions=None, report= None):
+        for group in group_asset:
+            mode = decisions.get(group.base_name, "Opaque") if decisions else "Opaque"
+            mi_report = create_material_instance(group, self.config, mode)
+            if report and mi_report.success:
+                report.mis_created += 1
+                if mi_report.mesh_linked:
+                    report.mis_linked += 1
         
     def import_directory(self, source_dir, category, dry_run = False):
         report = PipelineReport()
@@ -58,7 +119,7 @@ class AssetImporter():
                 task.automated = True
                 task.save = True
             
-                if detected_asset.asset_type  in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
+                if detected_asset.extension.lower() in (".fbx", ".obj") or detected_asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
                     task.options = get_mesh_setting(detected_asset)
             
                 tasks.append(task) 
@@ -111,20 +172,12 @@ class AssetImporter():
                         continue
                     for obj in imported_object:
                         texture_settings(obj, asset.texture_slot)
-                        unreal.EditorAssetLibrary.save_loaded_asset(obj)
+                        
+                        if asset.texture_slot == TextureSlot.BASE_COLOUR:
+                            asset.has_alpha = check_source_has_alpha(asset.source_path)
+                            unreal.log(f"AssetPort: BaseColour {asset.base_name} has_alpha -> {asset.has_alpha}")
                     
-            if self.config.auto_create_mi:
-                for group in group_asset:
-                    if slow_task.should_cancel():
-                        break
-                
-                    slow_task.enter_progress_frame(1, f"Building material: MI_{group.base_name}")
-                    mi_report = create_material_instance(group, self.config)
-                    if mi_report.success:    
-                        report.mis_created += 1
-                        if mi_report.mesh_linked:
-                            report.mis_linked += 1
-        
+           
         successful_imports = 0
         for task in tasks:
             if len(task.get_objects()) >0:

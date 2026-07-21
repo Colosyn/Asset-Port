@@ -18,6 +18,7 @@ class TextureSlot(Enum):
     AO = "AmbientOcclusion"
     EMISSIVE = "Emissive"
     OPACITY = "Opacity"
+    OPACITY_MASK = "OpacityMask"
     ORM = "ORM"
     HEIGHT = "Height"
     UNKNOWN = "Unknown"
@@ -35,6 +36,7 @@ class DetectedAsset:
     extension : str
     category : Optional[str] = None
     ue_path : Optional[str]= None
+    has_alpha : bool = False
     
 @dataclass
 class AssetGroup:

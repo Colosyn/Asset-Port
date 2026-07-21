@@ -9,13 +9,18 @@ def get_mesh_setting(asset: DetectedAsset):
     fbx.import_textures = False
     
     if asset.asset_type == AssetType.STATIC_MESH :
+        fbx.mesh_type_to_import = unreal.FBXImportType.FBXIT_STATIC_MESH
         static_mesh = fbx.static_mesh_import_data
         static_mesh.combine_meshes = True
         static_mesh.generate_lightmap_u_vs = True
         
-    if asset.asset_type == AssetType.SKELETAL_MESH:
+    elif asset.asset_type == AssetType.SKELETAL_MESH:
+      fbx.mesh_type_to_import = unreal.FBXImportType.FBXIT_SKELETAL_MESH  
       skeletal_mesh = fbx.skeletal_mesh_import_data
       skeletal_mesh.import_content_type =  unreal.FBXImportContentType.FBXICT_GEOMETRY
+      
+    else:
+        fbx.mesh_type_to_import = unreal.FBXImportType.FBXIT_STATIC_MESH
 
 
     return fbx
