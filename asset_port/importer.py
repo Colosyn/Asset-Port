@@ -66,7 +66,7 @@ class AssetImporter():
                 task.automated = True
                 task.save = True
             
-                if detected_asset.asset_type  in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
+                if detected_asset.extension.lower() in (".fbx", ".obj") or detected_asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
                     task.options = get_mesh_setting(detected_asset)
             
                 tasks.append(task) 
@@ -121,9 +121,12 @@ class AssetImporter():
                         texture_settings(obj, asset.texture_slot)
                         
                         if asset.texture_slot == TextureSlot.BASE_COLOUR:
-                            asset.has_alpha = obj.get_editor_property("has_alpha_channel")
-                            
-                        unreal.EditorAssetLibrary.save_loaded_asset(obj)
+                            try:
+                                tex_format = str(obj.get_editor_property("format"))
+                                asset.has_alpha = any(fmt in tex_format for fmt in ["DXT5","BC7","RGBA","BGRA", "TFO_BC7","TFO_DXT5"])
+                            except Exception:
+                                asset.has_alpha = False
+
                     
            
         successful_imports = 0

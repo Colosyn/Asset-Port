@@ -12,6 +12,11 @@ def create_material_instance(group : AssetGroup, config: ImporterSettings, blend
         m_master = config.parent_material_translucent
     else:
         m_master = config.parent_material_opaque
+    
+    unreal.log(f"AssetPort DEBUG: Building {group.base_name} with blend_mode='{blend_mode}', master_path='{m_master}'")
+    parent_material = unreal.EditorAssetLibrary.load_asset(m_master)
+    unreal.log(f"AssetPort DEBUG: Loaded parent_material='{parent_material}'")
+    
         
     mi_path = f"{folder_path}/MI_{group.base_name}"
     mi = None
