@@ -52,7 +52,7 @@ Suffixes determine how textures are mapped inside the created **Material Instanc
 | `_m`, `_metal`, `_metallic` | **Metallic** | `False` | `TC_Masks` |
 | `_ao`, `_ambientocclusion` | **AmbientOcclusion** (AO) | `False` | `TC_Masks` |
 | `_e`, `_emissive` | **Emissive** | `True` | `TC_Default` |
-| `_o`, `_opacity` | **Opacity** | `False` | `TC_Alpha` |
+| `_o`, `_opacity`, `_mask`, `_opacitymask` | **Opacity / Mask** | `False` | `TC_Alpha` |
 | `_h`, `_height`, `_disp`, `_displacement`  | **Height** | `False` | `TC_Masks` |
 | `_orm` | **ORM** (Occlusion, Roughness, Metallic) | `False` | `TC_Masks` |
 
@@ -83,7 +83,8 @@ Ensure your Master Material defines texture parameters matching these exact name
 
 ### Static Switches
 
-* **`UseORM`**: If your custom Master Material supports packed ORM textures, name your static switch parameter `UseORM`. When an `_orm` texture is detected, AssetPort automatically sets this switch to `True` in the generated Material Instance.
+* **`UseORM`**: Automatically set to `True` when an `_orm` texture is detected.
+* **`UseBaseColourAlpha`**: Automatically set to `True` when a Base Colour texture with an embedded alpha channel is detected and the material blend mode is set to `Masked` or `Translucent`.
 
 ### Unmatched Suffixes and Parameters
 

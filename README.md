@@ -20,6 +20,8 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 * **⚙️ ORM/Packed Map Switch**: Automatically detects Packed ORM maps and activates the material instance's `"UseORM"` static switch.
 * **🟢 Mesh Auto-Link**: Automatically assigns the newly generated Material Instance to Slot 0 of the imported Static/Skeletal Mesh.
 * **⚡ Responsive Progress Dialog**: Displays a cancellable progress bar via `unreal.ScopedSlowTask` during saves and material compilation, preventing editor hangs on large batches.
+* **👁️ Interactive Preview Mode (Dry Run)**: Run a simulation scan to view the proposed folder routing and clean asset tree in a dedicated EUW window (`EUW_AssetPort_Preview`) before performing an actual import.
+* **💎 Automated Transparency & Blend Mode Management**: Auto-detects alpha channels in Base Colour textures (PNG, TGA, EXR) and launches an interactive EUW popup (`EUW_TransparencySetup`) for artists to select Blend Modes (`Masked` vs `Translucent`). Automatically assigns `M_Master_Masked` or `M_Master_Translucent` and configures `UseBaseColourAlpha` switches.
 
 ---
 
@@ -30,12 +32,12 @@ To install AssetPort, place the script files and assets inside your Unreal Engin
 1. **Clone or Download** this repository.
 2. In your Windows File Explorer, navigate to your Unreal project's directory and go to:
    `YourProject/Content/Python/` (Create the `Python` folder if it doesn't exist).
-3. **Copy the following files** into `YourProject/Content/Python/`:
-   * The `asset_port/` directory
-   * `EUW_AssetPort.uasset`
-   * `M_Master.uasset`
-   * `init_unreal.py`
+3. **Copy the following folders and files** into `YourProject/Content/Python/`:
+   * `asset_port/` (Python core pipeline)
+   * `Materials/` (Master Materials: `M_Master_Opaque`, `M_Master_Masked`, `M_Master_Translucent`)
+   * `Widgets/` (Editor Utility Widgets & Row Widgets)
    * `importer_config.json`
+   * `init_unreal.py`
 4. **Start (or restart) Unreal Engine**. The **AssetPort** buttons will automatically load in your Content Browser's main Toolbar and Context Menu.
 
 > [!NOTE]
@@ -73,7 +75,9 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 
 ```json
 {
-    "parent_material": "/Game/Python/M_Master",
+    "master_opaque": "/Game/Python/Materials/M_Master_Opaque",
+    "master_masked": "/Game/Python/Materials/M_Master_Masked",
+    "master_translucent": "/Game/Python/Materials/M_Master_Translucent",
     "auto_create_mi": true,
     "auto_assign_to_mesh": true,
     "replace_existing": false,
@@ -81,7 +85,7 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 }
 ```
 
-* **`parent_material`**: The path to your Master Material. By default, it points to the included `M_Master`. If you move `M_Master` or want to use your own material, change this path.
+* **`master_opaque` / `master_masked` / `master_translucent`**: Paths to your Master Materials. By default, they point to the included materials under `/Game/Python/Materials/`.
 * **`auto_create_mi`**: Automatically generate a Material Instance for textures.
 * **`auto_assign_to_mesh`**: Link the created Material Instance to the imported mesh.
 * **`replace_existing`**: If true, overwrites any existing Material Instances with the same name.

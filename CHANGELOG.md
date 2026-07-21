@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.0] - 2026-07-21
+
+### Added
+- **New Master Materials:** Created dedicated Master Materials (`M_Master_Opaque`, `M_Master_Masked`, `M_Master_Translucent`) supporting full PBR shading and forward shading translucency.
+- **Automatic Transparency Detection:** PNG, TGA, and EXR base colour textures with embedded alpha channels are now automatically detected at import time via binary header inspection.
+- **Interactive Transparency EUW Setup:** Spawns a compact 2-column Editor Utility Widget popup (`EUW_TransparencySetup`) allowing artists to review and select Blend Modes (`Masked`, `Translucent`, `Opaque`) before materials are created.
+- **Dynamic Parent Material Assignment:** Material Instances automatically inherit from appropriate Master Materials (`M_Master_Opaque`, `M_Master_Masked`, `M_Master_Translucent`) based on chosen blend modes.
+- **Static Switch Parameter Wiring:** Automatically toggles `UseBaseColourAlpha` or `UseOpacityMap` parameters on generated Material Instances.
+- **Zero-Dependency Binary Header Inspection:** Fast header inspection for PNG, TGA, EXR, and JPEG texture format validation.
+
 ## [1.1.0] - 2026-06-16
 ### Added
 - Added "Preview Mode" (Dry Run) button to the main importer panel.
