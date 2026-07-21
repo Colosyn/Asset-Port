@@ -81,7 +81,7 @@ def on_popup_confirm(items, on_confirm_callback):
                     if combo:
                         selected_mode = combo.get_selected_option()
                         decisions[group.base_name] =  selected_mode
-                        unreal.log_warning(f"AssetPort: Could not find ComboBox on row for {group.base_name}")
+                        unreal.log(f"AssetPort: Set {group.base_name} blend mode -> {selected_mode}")
                     else:
                         unreal.log_warning(f"AssetPort: Could not find ComboBox on row for {group.base_name}")
                         
