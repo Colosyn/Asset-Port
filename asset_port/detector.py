@@ -70,6 +70,7 @@ class AssetDetector:
             rf"^(?:(?P<prefix>{prefix_pattern})_)?"
             rf"(?:(?P<category>{category_pattern})_)?"
             rf"(?P<base>.*?)"
+            rf"(?:_(?p<material>[A-Za-z0-9]+))?"
             rf"(?:_(?P<suffix>{suffix_pattern}))?$"
                    
         )
@@ -94,7 +95,8 @@ class AssetDetector:
                 asset_type=AssetType.UNKNOWN,
                 texture_slot=None,
                 extension=path_obj.suffix,
-                category=None
+                category=None,
+                material_slot_name=None
             )
         
         group = match.groupdict()
@@ -106,6 +108,9 @@ class AssetDetector:
         category_str = category_raw.lower() if category_raw else ""
         
         base_name = group.get("base")
+        
+        material_raw = group.get("material")
+        material_slot_name = material_raw if material_raw else None
         
         suffix_raw = group.get("suffix")
         suffix = suffix_raw if suffix_raw else ""
@@ -130,6 +135,7 @@ class AssetDetector:
             texture_slot= texture_slot,
             extension= path_obj.suffix,
             category=category,
+            material_slot_name=material_slot_name
         )
         
         return detected_asset
@@ -148,6 +154,10 @@ class AssetDetector:
             group = groups[asset.base_name]
             if asset.asset_type == AssetType.TEXTURE:
                 group.texture_list.append(asset)
+                
+                if asset.material_slot_name not in group.material_slots:
+                    group.material_slots[asset.material_slot_name] = []
+                group.material_slots[asset.material_slot_name].appem(asset)
                 
             elif asset.asset_type in (AssetType.SKELETAL_MESH, AssetType.STATIC_MESH):
                 group.mesh = asset

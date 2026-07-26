@@ -37,6 +37,7 @@ class DetectedAsset:
     category : Optional[str] = None
     ue_path : Optional[str]= None
     has_alpha : bool = False
+    material_slot_name : Optional[str] = None
     
 @dataclass
 class AssetGroup:
