@@ -119,7 +119,7 @@ class AssetImporter():
                 task.automated = True
                 task.save = True
             
-                if detected_asset.extension.lower() in (".fbx", ".obj") or detected_asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
+                if detected_asset.extension.lower() == ".fbx" or detected_asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
                     task.options = get_mesh_setting(detected_asset)
             
                 tasks.append(task) 

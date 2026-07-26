@@ -20,7 +20,7 @@ def asset_validator(asset : DetectedAsset ):
     if file_size > 100*1024*1024 and asset.asset_type == AssetType.TEXTURE:
         warnings.append("Texture Size is bigger than 100 MB")
         
-    extensions = [".obj",".fbx",".png",".tga", ".jpg", ".exr"]
+    extensions = [".fbx",".png",".tga", ".jpg", ".exr"]
     extension = asset.extension
     lower_extension = extension.lower()
     
