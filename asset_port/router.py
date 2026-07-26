@@ -1,6 +1,6 @@
 from pathlib import Path
-from asset_port.detector import AssetDetector
-from asset_port.models import DetectedAsset
+from asset_port.detector import AssetDetector 
+from asset_port.models import DetectedAsset, AssetType
 from typing import Optional
 class AssetRouter():
     
@@ -43,11 +43,16 @@ class AssetRouter():
             suffix = asset.suffix
             
         else:
-            suffix =f"_{asset.suffix}"           
+            suffix =f"_{asset.suffix}"      
             
-        folder_path = f"/Game/{category}/{asset.base_name}"
-        
-        asset_path = f"/Game/{category}/{asset.base_name}/{prefix}{asset.base_name}{suffix}"        
+        if asset.asset_type == AssetType.TEXTURE and asset.material_slot_name:
+            folder_path = f"/Game/{category}/{asset.base_name}/Textures"
+            asset_name = f"{prefix}{asset.base_name}_{asset.material_slot_name}{suffix}"
+        else:    
+            folder_path = f"/Game/{category}/{asset.base_name}"
+            asset_name = f"{prefix}{asset.base_name}{suffix}"
+            
+        asset_path = f"{folder_path}/{asset_name}"        
             
         return folder_path, asset_path
         

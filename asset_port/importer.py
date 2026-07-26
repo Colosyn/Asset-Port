@@ -140,7 +140,10 @@ class AssetImporter():
         for group in group_asset:
             ref_asset = group.mesh or (group.texture_list[0] if group.texture_list else None)
             if ref_asset and ref_asset.ue_path:
-                group.folder_path = "/".join(ref_asset.ue_path.split("/")[:-1])   
+                folder_parts = ref_asset.ue_path.split("/")[:-1]
+                if folder_parts and folder_parts[-1] == "Textures":
+                    folder_parts = folder_parts[:-1]
+                group.folder_path = "/".join(folder_parts)   
                 
                 group_warnings = group_validator(group)
                 if group_warnings:
