@@ -19,19 +19,26 @@ TRANSPARENCY_ID = unreal.Name("/Game/Python/Widgets/EUW_TransparencySetup.EUW_Tr
 def scan_for_transparency(groups):
     items = []
     for group in groups:
-        has_mask = any(t.texture_slot == TextureSlot.OPACITY_MASK for t in group.texture_list)
+        if group.is_multi_material:
+            slot_to_scan = {f"MI_{group.base_name}_{slot}": texs for slot, texs in group.material_slots.items()}
+        else:
+            slot_to_scan = {f"MI_{group.base_name}": group.texture_list}
+            
+        for mi_name, textures in slot_to_scan.items():
+            
+            has_mask = any(t.texture_slot == TextureSlot.OPACITY_MASK for t in textures)
         
-        has_opacity = any(t.texture_slot == TextureSlot.OPACITY for t in group.texture_list)
+            has_opacity = any(t.texture_slot == TextureSlot.OPACITY for t in textures)
         
-        base_colour = next((t for t in group.texture_list if t.texture_slot == TextureSlot.BASE_COLOUR), None)
-        has_alpha = base_colour.has_alpha if base_colour else False
+            base_colour = next((t for t in textures if t.texture_slot == TextureSlot.BASE_COLOUR), None)
+            has_alpha = base_colour.has_alpha if base_colour else False
         
-        if has_mask:
-            items.append((group, "Masked"))
-        elif has_opacity:
-            items.append((group, "Translucent"))
-        elif has_alpha:
-            items.append((group,"Masked"))
+            if has_mask:
+                items.append((mi_name, "Masked"))
+            elif has_opacity:
+                items.append((mi_name, "Translucent"))
+            elif has_alpha:
+                items.append((mi_name,"Masked"))
             
     return items
     
@@ -47,7 +54,7 @@ def show_transparency_popup(items, on_confirm_callback):
     
     transparency_widget = subsystem.spawn_and_register_tab(widget_asset)
     if transparency_widget:
-        name = [f"MI_{item[0].base_name}" for item in items]
+        name = [item[0] for item in items]
         default = [item[1] for item in items]
         
         transparency_widget.set_editor_property("MaterialNames", name)
@@ -74,19 +81,19 @@ def on_popup_confirm(items, on_confirm_callback):
             count = scroll_box.get_children_count()
             rows = [scroll_box.get_child_at(i) for i in range(count)]
             
-            for (group,_), row in zip(items, rows):
+            for (mi_name,_), row in zip(items, rows):
                 
                 try:
                     combo = row.get_editor_property("ComboBox_BlendMode")
                     if combo:
                         selected_mode = combo.get_selected_option()
-                        decisions[group.base_name] =  selected_mode
-                        unreal.log(f"AssetPort: Set {group.base_name} blend mode -> {selected_mode}")
+                        decisions[mi_name] =  selected_mode
+                        unreal.log(f"AssetPort: Set {mi_name} blend mode -> {selected_mode}")
                     else:
-                        unreal.log_warning(f"AssetPort: Could not find ComboBox on row for {group.base_name}")
+                        unreal.log_warning(f"AssetPort: Could not find ComboBox on row for {mi_name}")
                         
                 except Exception as err_row:
-                    unreal.log_error(f"AssetPort: Error reading row for {group.base_name}: {err_row}")
+                    unreal.log_error(f"AssetPort: Error reading row for {mi_name}: {err_row}")
                 
                    
     except Exception as err_main:
@@ -106,8 +113,7 @@ def on_popup_cancel(on_confirm_callback):
     transparency_widget = None
     on_confirm_callback({})
             
-        
-        
+              
 def execute_import_pipeline(folder_path, category):
     importer = AssetImporter()
     
@@ -228,10 +234,17 @@ def on_preview_clicked():
                 import_asset_name.append(f"{display_folder}|{mesh_name}")
             for texture in group.texture_list:
                 texture_name = texture.ue_path.split("/")[-1]
-                import_asset_name.append(f"{display_folder}|{texture_name}")
+                if group.is_multi_material:
+                    import_asset_name.append(f"{display_folder}/Textures|{texture_name}")
+                else:
+                    import_asset_name.append(f"{display_folder}|{texture_name}")
         
             if config.auto_create_mi:
-                import_asset_name.append(f"{display_folder}|MI_{group.base_name}")   
+                if group.is_multi_material:
+                    for slot_name in group.material_slots.keys():
+                        import_asset_name.append(f"{display_folder}/Materials|MI_{group.base_name}_{slot_name}")
+                else:
+                    import_asset_name.append(f"{display_folder}|MI_{group.base_name}")   
                 
         for warning in report.warnings:
             failed_asset_name.append(warning)
