@@ -108,13 +108,17 @@ class AssetDetector:
         category_str = category_raw.lower() if category_raw else ""
         
         base_name = group.get("base")
-        
         material_raw = group.get("material")
-        material_slot_name = material_raw if material_raw else None
-        
         suffix_raw = group.get("suffix")
-        suffix = suffix_raw if suffix_raw else ""
         
+        if material_raw and not suffix_raw:
+            if material_raw.lower() in SUFFIX_MAP:
+                suffix_raw = material_raw
+                material_raw = None
+                
+        material_slot_name = material_raw if material_raw else None
+        suffix = suffix_raw if suffix_raw else ""
+            
         
         asset_type = PREFIX_MAP.get(prefix, AssetType.UNKNOWN)
         
