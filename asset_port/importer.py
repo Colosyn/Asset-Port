@@ -70,8 +70,7 @@ class AssetImporter():
         
     def build_materials(self, group_asset, decisions=None, report= None):
         for group in group_asset:
-            mode = decisions.get(group.base_name, "Opaque") if decisions else "Opaque"
-            mi_report = create_material_instance(group, self.config, mode)
+            mi_report = create_material_instance(group, self.config, decisions)
             if report and mi_report.success:
                 report.mis_created += 1
                 if mi_report.mesh_linked:
