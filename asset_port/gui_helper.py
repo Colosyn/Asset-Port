@@ -235,14 +235,14 @@ def on_preview_clicked():
             for texture in group.texture_list:
                 texture_name = texture.ue_path.split("/")[-1]
                 if group.is_multi_material:
-                    import_asset_name.append(f"{display_folder}/Textures|{texture_name}")
+                    import_asset_name.append(f"{display_folder}|Textures/{texture_name}")
                 else:
                     import_asset_name.append(f"{display_folder}|{texture_name}")
         
             if config.auto_create_mi:
                 if group.is_multi_material:
                     for slot_name in group.material_slots.keys():
-                        import_asset_name.append(f"{display_folder}/Materials|MI_{group.base_name}_{slot_name}")
+                        import_asset_name.append(f"{display_folder}|Materials/MI_{group.base_name}_{slot_name}")
                 else:
                     import_asset_name.append(f"{display_folder}|MI_{group.base_name}")   
                 
