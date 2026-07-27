@@ -70,8 +70,7 @@ class AssetImporter():
         
     def build_materials(self, group_asset, decisions=None, report= None):
         for group in group_asset:
-            mode = decisions.get(group.base_name, "Opaque") if decisions else "Opaque"
-            mi_report = create_material_instance(group, self.config, mode)
+            mi_report = create_material_instance(group, self.config, decisions)
             if report and mi_report.success:
                 report.mis_created += 1
                 if mi_report.mesh_linked:
@@ -119,7 +118,7 @@ class AssetImporter():
                 task.automated = True
                 task.save = True
             
-                if detected_asset.extension.lower() in (".fbx", ".obj") or detected_asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
+                if detected_asset.extension.lower() == ".fbx" or detected_asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
                     task.options = get_mesh_setting(detected_asset)
             
                 tasks.append(task) 
@@ -140,7 +139,10 @@ class AssetImporter():
         for group in group_asset:
             ref_asset = group.mesh or (group.texture_list[0] if group.texture_list else None)
             if ref_asset and ref_asset.ue_path:
-                group.folder_path = "/".join(ref_asset.ue_path.split("/")[:-1])   
+                folder_parts = ref_asset.ue_path.split("/")[:-1]
+                if folder_parts and folder_parts[-1] == "Textures":
+                    folder_parts = folder_parts[:-1]
+                group.folder_path = "/".join(folder_parts)   
                 
                 group_warnings = group_validator(group)
                 if group_warnings:

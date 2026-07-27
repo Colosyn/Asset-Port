@@ -37,14 +37,22 @@ class DetectedAsset:
     category : Optional[str] = None
     ue_path : Optional[str]= None
     has_alpha : bool = False
+    material_slot_name : Optional[str] = None
     
 @dataclass
 class AssetGroup:
     base_name : str
     mesh : Optional[DetectedAsset] = None
     texture_list : list[DetectedAsset] = field(default_factory=list)
+    material_slots : dict[str, list[DetectedAsset]] = field(default_factory=dict)
     category : Optional[str] = None
     folder_path : Optional[str] = None
+    @property
+    def is_multi_material(self) -> bool:
+        return len(self.material_slots) > 1
+    
+    
+    
     
 @dataclass
 class ImportResult:
