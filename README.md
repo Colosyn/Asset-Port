@@ -9,20 +9,28 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 ---
 ## Demo
 
-[<img src="https://img.youtube.com/vi/Cm26pc_Ob-U/maxresdefault.jpg" width="800">](https://youtu.be/Cm26pc_Ob-U)
+[<img src="https://img.youtube.com/vi/Cm26pc_Ob-U/maxresdefault.jpg" width="800">](https://youtu.be/EEpK49R8tIo)
 
 ## Key Features
 
 * **📦 Smart Batch Importing**: Import meshes FBX and textures (PNG, TGA, EXR, JPG) recursively from any source folder.
 * **📂 Automated Organization**: Auto-detects asset category prefixes (e.g. `_env_`, `_wpn_`, `_prop_`) and organizes them into clean, structured subfolders inside Unreal’s Content Browser.
+* <img width="800" height="450" alt="Category" src="https://github.com/user-attachments/assets/4a80d53a-06aa-40db-a1c8-cd28c085f62b" />
+
 * **🎨 Automatic Material Instances (MI)**: Automatically generates Material Instances derived from a custom Master Material.
 * **🔗 Dynamic Parameter Wiring**: Detects texture suffix tags (e.g. `_N`, `_ORM`, `_Albedo`) and plugs them into the corresponding slot of the Material Instance with the correct **sRGB** and **Compression Settings** (like TC_Normalmap and TC_Masks).
 * **⚙️ ORM/Packed Map Switch**: Automatically detects Packed ORM maps and activates the material instance's `"UseORM"` static switch.
 * **🟢 Mesh Auto-Link**: Automatically assigns the newly generated Material Instance to Slot 0 of the imported Static/Skeletal Mesh.
 * **⚡ Responsive Progress Dialog**: Displays a cancellable progress bar via `unreal.ScopedSlowTask` during saves and material compilation, preventing editor hangs on large batches.
 * **👁️ Interactive Preview Mode (Dry Run)**: Run a simulation scan to view the proposed folder routing and clean asset tree in a dedicated EUW window (`EUW_AssetPort_Preview`) before performing an actual import.
+* <img width="800" height="450" alt="Preview" src="https://github.com/user-attachments/assets/a8b8d919-ffe7-41f2-bc69-1a868716cd17" />
+
 * **💎 Automated Transparency & Blend Mode Management**: Auto-detects alpha channels in Base Colour textures (PNG, TGA, EXR) and launches an interactive EUW popup (`EUW_TransparencySetup`) for artists to select Blend Modes (`Masked` vs `Translucent`). Automatically assigns `M_Master_Masked` or `M_Master_Translucent` and configures `UseBaseColourAlpha` switches.
+* <img width="800" height="450" alt="Transpareny" src="https://github.com/user-attachments/assets/b3f369c4-1f9d-419f-abf4-6c5af34c516a" />
+
 * **🎭 Multi-Material Slot Detection & Subfolder Routing**: Automatically detects assets with multiple material slots (e.g., `T_Chair_Metal_D`, `T_Chair_Wood_D`). Generates per-slot Material Instances (`MI_Chair_Metal`, `MI_Chair_Wood`), links each to its corresponding static mesh slot, and routes assets into `/Materials/` and `/Textures/` subfolders. Single-material assets remain 100% flat!
+* <img width="800" height="450" alt="Multi-Material" src="https://github.com/user-attachments/assets/049b1b2d-8775-4feb-8325-50ffa05c4abd" />
+
 
 ---
 
