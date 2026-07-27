@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.0] - 2026-07-27
+
+### Added
+- **Multi-Material Slot Detection & Regex:** Regex engine detects per-slot material tags (`(?P<material>...)`) for assets with multiple material slots (e.g. `T_Chair_Metal_D`, `T_Chair_Wood_D`).
+- **Automated Subfolder Routing:** Multi-material assets automatically place Material Instances in `/Materials/` and textures in `/Textures/` subfolders, while single-material assets remain flat under `/Game/{category}/{base_name}/`.
+- **Per-Slot Material Instance Generation:** Generates slot-specific Material Instances (`MI_<MeshName>_<SlotName>`) and links them directly to matching static mesh material slot indices in Unreal Engine.
+- **Multi-Slot Transparency Popup Integration:** Transparency scanning (`scan_for_transparency`) inspects each material slot independently, allowing artists to select blend modes per slot.
+
+### Fixed
+- **OBJ Importer Safety:** Removed unsupported `.obj` file extension check to prevent `FbxImportUI` runtime exceptions during batch processing.
+
 ## [1.2.0] - 2026-07-21
 
 ### Added

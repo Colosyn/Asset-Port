@@ -22,6 +22,7 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 * **⚡ Responsive Progress Dialog**: Displays a cancellable progress bar via `unreal.ScopedSlowTask` during saves and material compilation, preventing editor hangs on large batches.
 * **👁️ Interactive Preview Mode (Dry Run)**: Run a simulation scan to view the proposed folder routing and clean asset tree in a dedicated EUW window (`EUW_AssetPort_Preview`) before performing an actual import.
 * **💎 Automated Transparency & Blend Mode Management**: Auto-detects alpha channels in Base Colour textures (PNG, TGA, EXR) and launches an interactive EUW popup (`EUW_TransparencySetup`) for artists to select Blend Modes (`Masked` vs `Translucent`). Automatically assigns `M_Master_Masked` or `M_Master_Translucent` and configures `UseBaseColourAlpha` switches.
+* **🎭 Multi-Material Slot Detection & Subfolder Routing**: Automatically detects assets with multiple material slots (e.g., `T_Chair_Metal_D`, `T_Chair_Wood_D`). Generates per-slot Material Instances (`MI_Chair_Metal`, `MI_Chair_Wood`), links each to its corresponding static mesh slot, and routes assets into `/Materials/` and `/Textures/` subfolders. Single-material assets remain 100% flat!
 
 ---
 

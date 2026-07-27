@@ -2,10 +2,17 @@
 
 AssetPort parses filenames using a regex-based parser. To ensure that your meshes and textures are imported, categorized, and connected correctly, name your files using the following convention structure:
 
+### Single-Material Assets:
 ```text
 [Prefix]_[Category]_[BaseName]_[Suffix].[extension]
 ```
 *Example:* `SM_env_WallStone.fbx` or `T_env_WallStone_N.png`
+
+### Multi-Material Assets:
+```text
+[Prefix]_[Category]_[BaseName]_[MaterialSlotName]_[Suffix].[extension]
+```
+*Example:* `T_env_Chair_Metal_D.png` or `T_env_Chair_Wood_N.png`
 
 ---
 
@@ -61,7 +68,18 @@ Suffixes determine how textures are mapped inside the created **Material Instanc
 
 ---
 
-## 4. Custom Master Material Setup Guide
+## 4. Multi-Material Asset Behavior
+
+When `AssetPort` detects a `[MaterialSlotName]` tag in texture filenames (e.g. `Metal` or `Wood` in `T_Chair_Metal_D`):
+
+1. **Per-Slot Material Instances**: Generates individual Material Instances for each slot (`MI_Chair_Metal`, `MI_Chair_Wood`).
+2. **Mesh Slot Linkage**: Automatically assigns each Material Instance to the matching material slot name on the `StaticMesh`.
+3. **Automated Subfolder Routing**:
+   * **Single-Material Assets**: Placed 100% flat inside `/Game/[Category]/[BaseName]/`.
+   * **Multi-Material Assets**: Material Instances are routed to `/Game/[Category]/[BaseName]/Materials/` and textures to `/Game/[Category]/[BaseName]/Textures/`.
+   
+
+## 5. Custom Master Material Setup Guide
 
 If you configure a custom Master Material in `importer_config.json` via the `"parent_material"` property, your master material must use specific parameter names for AssetPort to correctly bind the scanned textures.
 
