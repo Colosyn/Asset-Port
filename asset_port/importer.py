@@ -108,6 +108,10 @@ class AssetImporter():
             
             if len(warnings) > 0:
                 report.warnings.extend(warnings)
+                
+            if detected_asset.is_udim and not detected_asset.is_udim_primary:
+                continue
+            
             
             asset_name = asset.split("/")[-1]
             if not dry_run:
