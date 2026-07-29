@@ -225,6 +225,14 @@ def on_preview_clicked():
         groups, report = importer.import_directory(folder_path, category, True)
         log_pipeline_report(report, folder_path, True)
         
+        max_udim_name_len = 0
+        for group in groups:
+            for texture in group.texture_list:
+                if texture.is_udim:
+                    name = texture.ue_path.split("/")[-1]
+                    max_udim_name_len = max(max_udim_name_len, len(name))
+        
+        pad_width = max_udim_name_len + 10
         for group in groups:  
             display_folder = group.folder_path
             if display_folder.startswith("/Game/"):
@@ -235,7 +243,7 @@ def on_preview_clicked():
             for texture in group.texture_list:
                 texture_name = texture.ue_path.split("/")[-1]
                 if texture.is_udim:
-                    padded_name= texture_name.ljust(40)
+                    padded_name= texture_name.ljust(pad_width)
                     texture_name = f"{padded_name}[UDIM: {texture.tile_count} Tiles]"
                 if group.is_multi_material:
                     import_asset_name.append(f"{display_folder}|Textures/{texture_name}")
