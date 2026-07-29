@@ -69,11 +69,10 @@ class AssetDetector:
         pattern = (
             rf"^(?:(?P<prefix>{prefix_pattern})_)?"
             rf"(?:(?P<category>{category_pattern})_)?"
-            rf"(?P<base>.*?)"
-            rf"(?:_(?P<material>[A-Za-z0-9]+))?"
-            rf"(?:_(?P<suffix>{suffix_pattern}))?"
-            rf"(?:_(?P<udim>1[0-9]{3}))?$"
-                   
+            rf"(?P<base>.+?)"
+            rf"(?:_(?P<material>[A-Za-z0-9]+?))?"
+            rf"(?:_(?P<suffix>{suffix_pattern}))?$"
+                 
         )
         
         self.regax = re.compile(pattern, re.IGNORECASE)
@@ -83,6 +82,12 @@ class AssetDetector:
         
         path_obj = Path(file_path)
         stem = path_obj.stem
+        
+        udim_tile = None
+        udim_match = re.search(r"_(1[0-9]{3})$", stem)
+        if udim_match:
+            udim_tile = udim_match.group(1)
+            stem = stem[:udim_match.start()]
         
         match = self.regax.match(stem)
         
@@ -129,9 +134,7 @@ class AssetDetector:
         if asset_type == AssetType.TEXTURE and suffix:
             texture_slot = SUFFIX_MAP.get(suffix.lower(), TextureSlot.UNKNOWN)
             
-        udim_raw = group.get("udim")
-        udim_tile = udim_raw if udim_raw else None
-           
+  
         detected_asset = DetectedAsset(
             filename=path_obj.name,
             source_path=str(path_obj.as_posix()),
