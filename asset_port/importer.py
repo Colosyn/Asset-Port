@@ -109,12 +109,14 @@ class AssetImporter():
             if len(warnings) > 0:
                 report.warnings.extend(warnings)
                 
+            detect_group.append(detected_asset)   
+            
             if detected_asset.is_udim and not detected_asset.is_udim_primary:
                 continue
-            
-            
+        
             asset_name = asset.split("/")[-1]
             if not dry_run:
+                
                 task = unreal.AssetImportTask()  
                 task.filename = detected_asset.source_path
                 task.destination_path = folder
@@ -126,7 +128,7 @@ class AssetImporter():
                     task.options = get_mesh_setting(detected_asset)
             
                 tasks.append(task) 
-            detect_group.append(detected_asset)
+            
         if not dry_run:      
             imported_objects = unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
         

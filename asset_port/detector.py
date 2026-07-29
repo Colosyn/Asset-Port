@@ -149,6 +149,7 @@ class AssetDetector:
             udim_tile=udim_tile
         )
         
+
         return detected_asset
         
         
@@ -165,6 +166,11 @@ class AssetDetector:
             group = groups[asset.base_name]
             if asset.asset_type == AssetType.TEXTURE:
                 if asset.is_udim and not asset.is_udim_primary:
+                    primary = next((t for t in group.texture_list 
+                                    if t.suffix == asset.suffix and
+                                    t.material_slot_name == asset.material_slot_name), None)
+                    if primary:
+                        primary.tile_count += 1
                     continue
                 group.texture_list.append(asset)
                 

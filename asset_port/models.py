@@ -39,7 +39,7 @@ class DetectedAsset:
     has_alpha : bool = False
     material_slot_name : Optional[str] = None
     udim_tile : Optional[str] = None
-    
+    tile_count : int = 1
     @property
     def is_udim(self) -> bool:
         return self.udim_tile is not None

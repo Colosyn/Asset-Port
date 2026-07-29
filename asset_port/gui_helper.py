@@ -234,6 +234,9 @@ def on_preview_clicked():
                 import_asset_name.append(f"{display_folder}|{mesh_name}")
             for texture in group.texture_list:
                 texture_name = texture.ue_path.split("/")[-1]
+                if texture.is_udim:
+                    padded_name= texture_name.ljust(40)
+                    texture_name = f"{padded_name}[UDIM: {texture.tile_count} Tiles]"
                 if group.is_multi_material:
                     import_asset_name.append(f"{display_folder}|Textures/{texture_name}")
                 else:
