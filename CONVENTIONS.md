@@ -14,6 +14,11 @@ AssetPort parses filenames using a regex-based parser. To ensure that your meshe
 ```
 *Example:* `T_env_Chair_Metal_D.png` or `T_env_Chair_Wood_N.png`
 
+### UDIM Texture Sets:
+```text
+[Prefix]_[Category]_[BaseName]_[Suffix]_[TileID].[extension]
+```
+*Example*: `T_env_Door_N_1001.png`, `T_env_Door_N_1002.png`
 ---
 
 ## 1. Prefixes (Asset Type)
@@ -103,6 +108,7 @@ Ensure your Master Material defines texture parameters matching these exact name
 
 * **`UseORM`**: Automatically set to `True` when an `_orm` texture is detected.
 * **`UseBaseColourAlpha`**: Automatically set to `True` when a Base Colour texture with an embedded alpha channel is detected and the material blend mode is set to `Masked` or `Translucent`.
+* **`UseVT`**: Automatically set to `True` when UDIM tile sequences (`_1001` to `_1999`) or Virtual Textures are detected, binding to parameters named `[ParamName]_VT` (e.g. `BaseColour_VT`, `Normal_VT`, `ORM_VT`).
 
 ### Unmatched Suffixes and Parameters
 

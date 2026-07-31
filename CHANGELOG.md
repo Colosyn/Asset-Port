@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0] - 2026-07-31
+### Added
+- **UDIM Streaming Virtual Texture Support**: Automatically detects UDIM tile sequences (`_1001` through `_1999`) and imports them as single Streaming Virtual Textures. Secondary tile tasks are filtered to prevent import collisions.
+- **Dynamic VT Parameter Routing**: Automatically detects Virtual Textures (UDIMs or 4K Auto-VTs) in `materials.py` and toggles the `UseVT` static switch to assign textures to `_VT` parameter slots.
+- **Inline UDIM Tile Count in Preview Window**: Dry Run simulation preview now displays `[UDIM: X Tiles]` inline with each UDIM texture map.
+- **Multi-Engine Version Compatibility**: Verified compatibility across Unreal Engine 5.3, 5.7, and 5.8.
+### Refactored & Optimized
+- **Shader Permutation Optimization**: Removed 3 redundant static switches (`UV Control Switch`, `HasMetalicTexture`, `IsMetalic`) across all Master Materials (`M_Master_Opaque`, `M_Master_Masked`, `M_Master_Translucent`), reducing active shader permutations while preserving solid-green shader complexity.
+- **PBR Default Textures & Strengths**: Updated default VT textures (`T_Default_Black_VT`, `T_Default_White_VT`) and set `HeightStrength` and `EmissiveStrength` defaults to `1.0` for instant out-of-the-box texture assignment.
+
 ## [1.3.0] - 2026-07-27
 
 ### Added

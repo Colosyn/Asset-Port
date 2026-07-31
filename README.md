@@ -31,6 +31,8 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 * **🎭 Multi-Material Slot Detection & Subfolder Routing**: Automatically detects assets with multiple material slots (e.g., `T_Chair_Metal_D`, `T_Chair_Wood_D`). Generates per-slot Material Instances (`MI_Chair_Metal`, `MI_Chair_Wood`), links each to its corresponding static mesh slot, and routes assets into `/Materials/` and `/Textures/` subfolders. Single-material assets remain 100% flat!
 * <img width="800" height="450" alt="Multi-Material" src="https://github.com/user-attachments/assets/049b1b2d-8775-4feb-8325-50ffa05c4abd" />
 
+* **🧩 UDIM & Virtual Texture Support**: Automatically detects UDIM tile sequences (`_1001` to `_1999`) and 4K Auto-VTs, routes them to dedicated Virtual Texture parameters, and displays tile counts inline in the Preview window (`[UDIM: 6 Tiles]`). 
+
 
 ---
 
@@ -58,7 +60,7 @@ To install AssetPort, place the script files and assets inside your Unreal Engin
 1. Click the **AssetPort** button on the Content Browser Toolbar, or right-click anywhere in the Content Browser and select **AssetPort**.
 2. Click **Browse** and select a folder on your computer containing the meshes and textures you want to import.
 3. Select an option from the **Category Dropdown**:
-   * **None (Recommended)**: Auto-detects categories based on file prefixes.
+   * **Auto-Detect (Recommended)**: Auto-detects categories based on file prefixes.
    * **Weapon/Environment/Props/Character**: Overrides detection and forces all assets into the selected category.
 4. **Choose your path**:
    * Click **Preview**: Runs a simulation scan and opens a collapsible tree UI. If it looks correct, click **Confirm Import** at the bottom, or **Cancel** to abort.
