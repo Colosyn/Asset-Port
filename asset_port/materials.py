@@ -63,28 +63,54 @@ def create_material_instance(group : AssetGroup, config: ImporterSettings, decis
                 value=use_alpha
             )
             
-            
+        has_vt = False
         for texture in textures:
+            if not texture.ue_path:
+                continue
+            tex_obj = unreal.EditorAssetLibrary.load_asset(texture.ue_path)
+            if tex_obj and tex_obj.get_editor_property("virtual_texture_streaming"):
+                has_vt = True
+                break
+            
+        unreal.MaterialEditingLibrary.set_material_instance_static_switch_parameter_value(
+            mi,
+            "UseVT",
+            value=has_vt,
+        )
+        
+        for texture in textures:
+            if not texture.ue_path:
+                continue
             texture_object = unreal.EditorAssetLibrary.load_asset(texture.ue_path)
+            
+            if has_vt and not texture_object.get_editor_property("virtual_texture_streaming"):
+                texture_object.set_editor_property("virtual_texture_streaming", True)
+                unreal.EditorAssetLibrary.save_loaded_asset(texture_object)
+                
             param_name = texture.texture_slot.value
             if texture.texture_slot == TextureSlot.OPACITY_MASK:
                 param_name = "OpacityMask"
             elif texture.texture_slot == TextureSlot.OPACITY:
                 param_name = "Opacity"
                 
-                
+            if has_vt:
+                param_name = f"{param_name}_VT"
+            
             unreal.MaterialEditingLibrary.set_material_instance_texture_parameter_value(
                 mi,
                 param_name,
                 texture_object
             )
-            material_report.texture_assigned[param_name] = texture.ue_path
+            
             if texture.texture_slot == TextureSlot.ORM:
                 unreal.MaterialEditingLibrary.set_material_instance_static_switch_parameter_value(
                     mi,
                     "UseORM",
                     value=True
                 )
+
+            
+            material_report.texture_assigned[param_name] = texture.ue_path
                 
         unreal.EditorAssetLibrary.save_loaded_asset(mi)
         
