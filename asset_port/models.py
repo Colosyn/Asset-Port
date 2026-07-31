@@ -38,6 +38,15 @@ class DetectedAsset:
     ue_path : Optional[str]= None
     has_alpha : bool = False
     material_slot_name : Optional[str] = None
+    udim_tile : Optional[str] = None
+    tile_count : int = 1
+    @property
+    def is_udim(self) -> bool:
+        return self.udim_tile is not None
+    
+    @property
+    def is_udim_primary(self) -> bool:
+        return self.udim_tile == "1001"
     
 @dataclass
 class AssetGroup:

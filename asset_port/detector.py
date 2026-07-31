@@ -69,10 +69,10 @@ class AssetDetector:
         pattern = (
             rf"^(?:(?P<prefix>{prefix_pattern})_)?"
             rf"(?:(?P<category>{category_pattern})_)?"
-            rf"(?P<base>.*?)"
-            rf"(?:_(?P<material>[A-Za-z0-9]+))?"
+            rf"(?P<base>.+?)"
+            rf"(?:_(?P<material>[A-Za-z0-9]+?))?"
             rf"(?:_(?P<suffix>{suffix_pattern}))?$"
-                   
+                 
         )
         
         self.regax = re.compile(pattern, re.IGNORECASE)
@@ -82,6 +82,12 @@ class AssetDetector:
         
         path_obj = Path(file_path)
         stem = path_obj.stem
+        
+        udim_tile = None
+        udim_match = re.search(r"_(1[0-9]{3})$", stem)
+        if udim_match:
+            udim_tile = udim_match.group(1)
+            stem = stem[:udim_match.start()]
         
         match = self.regax.match(stem)
         
@@ -128,7 +134,7 @@ class AssetDetector:
         if asset_type == AssetType.TEXTURE and suffix:
             texture_slot = SUFFIX_MAP.get(suffix.lower(), TextureSlot.UNKNOWN)
             
-            
+  
         detected_asset = DetectedAsset(
             filename=path_obj.name,
             source_path=str(path_obj.as_posix()),
@@ -139,9 +145,11 @@ class AssetDetector:
             texture_slot= texture_slot,
             extension= path_obj.suffix,
             category=category,
-            material_slot_name=material_slot_name
+            material_slot_name=material_slot_name,
+            udim_tile=udim_tile
         )
         
+
         return detected_asset
         
         
@@ -157,6 +165,13 @@ class AssetDetector:
             
             group = groups[asset.base_name]
             if asset.asset_type == AssetType.TEXTURE:
+                if asset.is_udim and not asset.is_udim_primary:
+                    primary = next((t for t in group.texture_list 
+                                    if t.suffix == asset.suffix and
+                                    t.material_slot_name == asset.material_slot_name), None)
+                    if primary:
+                        primary.tile_count += 1
+                    continue
                 group.texture_list.append(asset)
                 
                 if asset.material_slot_name:
