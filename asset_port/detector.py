@@ -1,5 +1,5 @@
 from pathlib import Path
-from .models import AssetType, TextureSlot, DetectedAsset, AssetGroup
+from .models import AssetType, TextureSlot, DetectedAsset, AssetGroup, AtlasGroup
 import re
 
 PREFIX_MAP = {
@@ -199,3 +199,47 @@ class AssetDetector:
         
         return list(groups.values())
             
+            
+    def group_atlas_assets(self, assets: list[DetectedAsset]) -> tuple[list[AtlasGroup], list[DetectedAsset]]:
+        
+        kit_meshes ={}
+        
+        for asset in assets:
+            if asset.kit_name:
+                if asset.kit_name not in kit_meshes:
+                    kit_meshes[asset.kit_name] = []
+                kit_meshes[asset.kit_name].append(asset)
+                
+        
+        kit_textures = {}
+        
+        remaining = []
+        
+        for asset in assets:
+            if asset.kit_name:
+                continue
+            
+            if asset.asset_type == AssetType.TEXTURE and asset.base_name in kit_meshes:
+                
+                if asset.base_name not in kit_textures:
+                    kit_textures[asset.base_name] = []
+                kit_textures[asset.base_name].append(asset)
+                
+            else:
+                remaining.append(asset)
+                
+                
+        atlas_group = []
+        
+        for kit_name, meshes in kit_meshes.items():
+            group = AtlasGroup(
+                kit_name=kit_name,
+                mesh_list=meshes,
+                texture_list=kit_textures.get(kit_name,[]),
+                category=meshes[0].category,
+            )
+            atlas_group.append(group)
+            
+        return atlas_group, remaining
+                
+                
