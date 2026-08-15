@@ -113,9 +113,18 @@ class AssetDetector:
         category_raw = group.get("category")
         category_str = category_raw.lower() if category_raw else ""
         
-        base_name = group.get("base")
+        parsed_name = group.get("base")
         material_raw = group.get("material")
         suffix_raw = group.get("suffix")
+        
+        kit_name = ""
+        ue_asset_name = ""
+        
+        if "-" in parsed_name and prefix in ("sm", "sk"):
+            parts = parsed_name.rsplit("-", 1)
+            individual_name = parts[0]
+            kit_name =parts[1]
+            ue_asset_name = f"{prefix}_{individual_name}"
         
         if material_raw and not suffix_raw:
             if material_raw.lower() in SUFFIX_MAP:
@@ -139,14 +148,16 @@ class AssetDetector:
             filename=path_obj.name,
             source_path=str(path_obj.as_posix()),
             prefix=prefix,
-            base_name = base_name or stem,
+            base_name = parsed_name,
             suffix= suffix,
             asset_type= asset_type,
             texture_slot= texture_slot,
             extension= path_obj.suffix,
             category=category,
             material_slot_name=material_slot_name,
-            udim_tile=udim_tile
+            udim_tile=udim_tile,
+            kit_name=kit_name,
+            ue_asset_name=ue_asset_name
         )
         
 
