@@ -124,7 +124,7 @@ class AssetDetector:
             parts = parsed_name.rsplit("-", 1)
             individual_name = parts[0]
             kit_name =parts[1]
-            ue_asset_name = f"{prefix}_{individual_name}"
+            ue_asset_name = f"{prefix.upper()}_{individual_name}"
         
         if material_raw and not suffix_raw:
             if material_raw.lower() in SUFFIX_MAP:
