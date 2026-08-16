@@ -70,7 +70,10 @@ class AssetImporter():
         
     def build_materials(self, group_asset, decisions=None, report= None):
         for group in group_asset:
-            mi_report = create_material_instance(group, self.config, decisions)
+            if isinstance(group, AtlasGroup):
+                mi_report = create_atlas_material_instance(group, self.config, decisions)
+            else:
+                mi_report = create_material_instance(group, self.config, decisions)
             if report and mi_report.success:
                 report.mis_created += 1
                 if mi_report.mesh_linked:
@@ -103,8 +106,49 @@ class AssetImporter():
             
             detect_group.append(detected_asset)
         
-        group_asset = self.detector.group_assets(detect_group)
+        atlas_groups, remianing_assets = self.detector.group_atlas_assets(detect_group)
+        group_asset = self.detector.group_assets(remianing_assets)
         
+        all_group = atlas_groups + group_asset
+        
+        for atlas_group in atlas_groups:
+            for mesh in atlas_group.mesh_list:
+                folder, asset_path = self.router.get_atlas_folder_path(mesh, atlas_group,category)
+                mesh.ue_path = asset_path
+                atlas_group.folder_path = folder
+                
+                mesh_name = mesh.ue_path.split("/")[-1]
+                if not dry_run:
+                    task = unreal.AssetImportTask()  
+                    task.filename = mesh.source_path
+                    task.destination_path = folder
+                    task.destination_name = mesh_name
+                    task.automated = True
+                    task.save = True
+                                        
+                    if mesh.extension.lower() == ".fbx" or mesh.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
+                        task.options = get_mesh_setting(mesh)
+                                    
+                    tasks.append(task)
+            for texture in atlas_group.texture_list:
+                folder, asset_path = self.router.get_atlas_folder_path(texture, atlas_group,category)
+                texture.ue_path = asset_path
+                if texture.is_udim and not texture.is_udim_primary:
+                    continue
+                texture_name = texture.ue_path.split("/")[-1]
+                if not dry_run:
+                    task = unreal.AssetImportTask()  
+                    task.filename = texture.source_path
+                    task.destination_path = folder
+                    task.destination_name = texture_name
+                    task.automated = True
+                    task.save = True
+                                                            
+                    tasks.append(task)
+            atlas_warnings = atlas_group_validator(atlas_group)
+            if atlas_warnings:
+                report.warnings.extend(atlas_warnings)
+                    
         for group in group_asset:
             assets_in_group = group.texture_list.copy()
             if group.mesh:
@@ -155,16 +199,16 @@ class AssetImporter():
                         unreal.EditorAssetLibrary.rename_asset(current_path, asset.ue_path)
             
         
-        report.groups_found = len(group_asset)
+        report.groups_found = len(group_asset) + len(atlas_groups)
         if dry_run:
             report.asset_import = len(detect_group)
             if self.config.auto_create_mi:
-                report.mis_created = len(group_asset)
+                report.mis_created = len(group_asset) + len(atlas_groups)
                 report.mis_linked = sum(1 for g in group_asset if g.mesh is not None)
         
-            return group_asset, report    
+            return all_group, report    
             
-        total_steps = len(detect_group) + (len(group_asset) if self.config.auto_create_mi else 0)
+        total_steps = len(detect_group) + (len(all_group) if self.config.auto_create_mi else 0)
         
         with unreal.ScopedSlowTask(total_steps, "Processing Imported assets...") as slow_task:
             slow_task.make_dialog(True)
@@ -196,4 +240,4 @@ class AssetImporter():
         
         report.asset_import = successful_imports
         
-        return group_asset, report 
+        return all_group, report 
