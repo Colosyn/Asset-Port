@@ -146,9 +146,9 @@ def create_atlas_material_instance(group_atlas: AtlasGroup, config: ImporterSett
         
     
     
-    mi_name = group_atlas.kit_name
+    mi_name = f"MI_{group_atlas.kit_name}"
     mi_folder = group_atlas.folder_path 
-    mi_path =f"{mi_folder}/MI_{mi_name}"
+    mi_path =f"{mi_folder}/{mi_name}"
             
     blend_mode = decisions.get(mi_name, "Opaque") if decisions else "Opaque"
             
@@ -176,6 +176,8 @@ def create_atlas_material_instance(group_atlas: AtlasGroup, config: ImporterSett
             asset_class=unreal.MaterialInstanceConstant,
             factory=factory
             )
+        
+    mi.set_editor_property("parent", parent_material)
             
             
     textures = group_atlas.texture_list
@@ -246,4 +248,5 @@ def create_atlas_material_instance(group_atlas: AtlasGroup, config: ImporterSett
             unreal.EditorAssetLibrary.save_loaded_asset(mesh_object)
             material_report.mesh_linked = group_atlas.kit_name
         
+    material_report.success = True
     return material_report
