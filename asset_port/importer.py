@@ -82,7 +82,7 @@ class AssetImporter():
     def import_directory(self, source_dir, category, dry_run = False):
         report = PipelineReport()
         file_path = Path(source_dir)
-        tasks = []
+        task_pairs = []
         detect_group = []
         for file in file_path.rglob("*"):
             if file.is_dir():
@@ -129,7 +129,7 @@ class AssetImporter():
                     if mesh.extension.lower() == ".fbx" or mesh.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
                         task.options = get_mesh_setting(mesh)
                                     
-                    tasks.append(task)
+                    task_pairs.append((mesh, task))
             for texture in atlas_group.texture_list:
                 folder, asset_path = self.router.get_atlas_folder_path(texture, atlas_group,category)
                 texture.ue_path = asset_path
@@ -144,7 +144,7 @@ class AssetImporter():
                     task.automated = True
                     task.save = True
                                                             
-                    tasks.append(task)
+                    task_pairs.append((texture, task))
             atlas_warnings = atlas_group_validator(atlas_group)
             if atlas_warnings:
                 report.warnings.extend(atlas_warnings)
@@ -173,7 +173,7 @@ class AssetImporter():
                     if asset.extension.lower() == ".fbx" or asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
                         task.options = get_mesh_setting(asset)
                 
-                    tasks.append(task) 
+                    task_pairs.append((asset, task)) 
             
             ref_asset = group.mesh or (group.texture_list[0] if group.texture_list else None)
             if ref_asset and ref_asset.ue_path:
@@ -186,10 +186,11 @@ class AssetImporter():
                 if group_warnings:
                     report.warnings.extend(group_warnings)
         
-        if not dry_run:      
-            imported_objects = unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
+        if not dry_run:   
+            unreal_tasks = [t for a, t in task_pairs]   
+            imported_objects = unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(unreal_tasks)
                             
-            for asset, task in zip(detect_group, tasks):
+            for asset, task in task_pairs:
                 imported_objs = task.get_objects()
                 if not imported_objs:
                     continue
@@ -216,7 +217,7 @@ class AssetImporter():
             slow_task.make_dialog(True)
                 
     
-            for asset, task in zip(detect_group, tasks):
+            for asset, task in task_pairs:
                 if slow_task.should_cancel():
                     break
             
@@ -233,7 +234,7 @@ class AssetImporter():
                             unreal.log(f"AssetPort: BaseColour {asset.base_name} has_alpha -> {asset.has_alpha}")
                     
         successful_imports = 0
-        for task in tasks:
+        for asset, task in task_pairs:
             if len(task.get_objects()) >0:
                 successful_imports += 1
                 
