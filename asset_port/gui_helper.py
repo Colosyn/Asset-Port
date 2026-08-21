@@ -4,7 +4,7 @@ from tkinter import filedialog
 from asset_port.importer import AssetImporter
 from asset_port.logger import log_pipeline_report
 from asset_port.config import config_loader
-from asset_port.models import TextureSlot
+from asset_port.models import TextureSlot, AtlasGroup, AssetGroup
 active_widget = None
 preview_widget = None
 last_folder_path = ""
@@ -19,8 +19,10 @@ TRANSPARENCY_ID = unreal.Name("/Game/Python/Widgets/EUW_TransparencySetup.EUW_Tr
 def scan_for_transparency(groups):
     items = []
     for group in groups:
-        if group.is_multi_material:
+        if isinstance(group, AssetGroup) and group.is_multi_material:
             slot_to_scan = {f"MI_{group.base_name}_{slot}": texs for slot, texs in group.material_slots.items()}
+        elif isinstance(group, AtlasGroup):
+            slot_to_scan = {f"MI_{group.kit_name}" : group.texture_list}
         else:
             slot_to_scan = {f"MI_{group.base_name}": group.texture_list}
             
@@ -237,23 +239,31 @@ def on_preview_clicked():
             display_folder = group.folder_path
             if display_folder.startswith("/Game/"):
                 display_folder = display_folder[6:]
-            if group.mesh is not None:
+            if isinstance(group, AtlasGroup):
+                display_folder = f"{display_folder}  [Atlas: {group.mesh_count} Meshes]"  
+            if isinstance(group, AssetGroup) and  group.mesh is not None:
                 mesh_name = group.mesh.ue_path.split("/")[-1]
                 import_asset_name.append(f"{display_folder}|{mesh_name}")
+            elif isinstance(group, AtlasGroup):
+                for mesh in group.mesh_list:
+                    mesh_name = mesh.ue_path.split("/")[-1]
+                    import_asset_name.append(f"{display_folder}|{mesh_name}")
             for texture in group.texture_list:
                 texture_name = texture.ue_path.split("/")[-1]
                 if texture.is_udim:
                     padded_name= texture_name.ljust(pad_width)
                     texture_name = f"{padded_name}[UDIM: {texture.tile_count} Tiles]"
-                if group.is_multi_material:
+                if isinstance(group, AssetGroup) and group.is_multi_material:
                     import_asset_name.append(f"{display_folder}|Textures/{texture_name}")
                 else:
                     import_asset_name.append(f"{display_folder}|{texture_name}")
         
             if config.auto_create_mi:
-                if group.is_multi_material:
+                if isinstance(group, AssetGroup) and group.is_multi_material:
                     for slot_name in group.material_slots.keys():
                         import_asset_name.append(f"{display_folder}|Materials/MI_{group.base_name}_{slot_name}")
+                elif isinstance(group, AtlasGroup):
+                    import_asset_name.append(f"{display_folder}|MI_{group.kit_name}")
                 else:
                     import_asset_name.append(f"{display_folder}|MI_{group.base_name}")   
                 
