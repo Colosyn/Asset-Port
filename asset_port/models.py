@@ -99,6 +99,8 @@ class PipelineReport:
     asset_failed : int =0
     mis_created : int =0
     mis_linked : int = 0
+    atlas_group_found : int =0
+    atlas_meshes_imported : int =0
     warnings : list[str] = field(default_factory=list)
     errors  : list[str] = field(default_factory=list)
     

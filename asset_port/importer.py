@@ -200,6 +200,8 @@ class AssetImporter():
             
         
         report.groups_found = len(group_asset) + len(atlas_groups)
+        report.atlas_group_found = len(atlas_groups)
+        report.atlas_meshes_imported = sum(g.mesh_count for g in atlas_groups)
         if dry_run:
             report.asset_import = len(detect_group)
             if self.config.auto_create_mi:
