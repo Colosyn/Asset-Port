@@ -33,6 +33,8 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 
 * **🧩 UDIM & Virtual Texture Support**: Automatically detects UDIM tile sequences (`_1001` to `_1999`) and 4K Auto-VTs, routes them to dedicated Virtual Texture parameters, and displays tile counts inline in the Preview window (`[UDIM: 6 Tiles]`). 
 
+* **🏺 Atlas & Modular Kit Detection**: Automatically detects kit-based asset groups using hyphen delimiters (e.g. `SM_Rock01-RockKit.fbx`). Unifies all kit meshes under a flat folder (`/Game/Environment/RockKit/`), cleans asset names on import (`SM_Rock01`), shares a single Material Instance (`MI_RockKit`) across all meshes at slot 0, and badges kit summaries in the Preview UI (`[Atlas: X Meshes]`).
+
 
 ---
 

@@ -19,7 +19,15 @@ AssetPort parses filenames using a regex-based parser. To ensure that your meshe
 [Prefix]_[Category]_[BaseName]_[Suffix]_[TileID].[extension]
 ```
 *Example*: `T_env_Door_N_1001.png`, `T_env_Door_N_1002.png`
+
+### Atlas / Modular Kit Assets:
+```text
+Mesh:    [Prefix]_[Category]_[IndividualName]-[KitName].[extension]
+Texture: [Prefix]_[Category]_[KitName]_[Suffix].[extension]
+```
+*Example*: `SM_env_Rock01-RockKit.fbx`, `SM_env_Rock02-RockKit.fbx`, `T_env_RockKit_D.png`, `T_env_RockKit_ORM.png`
 ---
+
 
 ## 1. Prefixes (Asset Type)
 
@@ -82,7 +90,6 @@ When `AssetPort` detects a `[MaterialSlotName]` tag in texture filenames (e.g. `
 3. **Automated Subfolder Routing**:
    * **Single-Material Assets**: Placed 100% flat inside `/Game/[Category]/[BaseName]/`.
    * **Multi-Material Assets**: Material Instances are routed to `/Game/[Category]/[BaseName]/Materials/` and textures to `/Game/[Category]/[BaseName]/Textures/`.
-   
 
 ## 5. Custom Master Material Setup Guide
 
@@ -115,3 +122,12 @@ Ensure your Master Material defines texture parameters matching these exact name
 If a texture's suffix doesn't match any known slots, or if a slot is not found on your custom Master Material:
 * **Safe Fallback:** The assignment will be silently ignored.
 * **Pipeline Continues:** It will not raise an error or crash the import process. The mesh will still be imported, the material instance will be created, other matching parameters will be connected, and the material will be assigned to the mesh successfully.
+
+## 6. Atlas & Modular Kit Behavior
+AssetPort supports texture atlas workflows where multiple static meshes share a single texture set and Material Instance:
+1. **Hyphen Delimiter (`-`)**: The hyphen is **reserved exclusively** for Atlas / Kit meshes to separate the individual mesh name from its shared kit name (`SM_PropName-KitName.fbx`).
+2. **Automated Clean Naming**: When imported into Unreal Engine, kit meshes are automatically cleaned and renamed without the kit suffix (e.g. `SM_Rock01-RockKit.fbx` $\rightarrow$ `SM_Rock01`).
+3. **Shared Material Instance**: A single Material Instance (`MI_[KitName]`) is generated and linked to Slot 0 across all meshes in the kit.
+4. **Flat Folder Routing**: All kit meshes, textures, and the shared Material Instance are placed flat inside `/Game/[Category]/[KitName]/`.
+> [!IMPORTANT]
+> **Hyphen Constraint:** Do not use hyphens (`-`) in standard non-kit asset filenames, as AssetPort treats hyphens as the kit separator.

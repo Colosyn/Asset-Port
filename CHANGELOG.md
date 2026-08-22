@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0] - 2026-08-22
+### Added
+- **Atlas & Modular Kit Grouping**: Hyphen-delimited kit mesh detection (`SM_Mesh-KitName`) linking multiple static meshes to a single shared PBR texture set.
+- **Dedicated Kit Folder Router**: Flat routing for all kit assets into `/Game/{Category}/{KitName}/`.
+- **Automated Kit Mesh Renaming**: Automatically strips kit suffixes during Unreal asset creation (e.g., `SM_Rock01-RockKit.fbx` $\rightarrow$ `SM_Rock01`).
+- **Shared Atlas Material Instance Generation**: `create_atlas_material_instance` builds and assigns a single shared MI (`MI_{KitName}`) to Slot 0 across all kit static meshes.
+- **Atlas Group Validation**: `atlas_group_validator` checks for orphaned kit meshes, missing PBR maps, and single-mesh kits.
+- **Preview UI Kit Badges**: Dry Run preview tree displays kit folders with `[Atlas: X Meshes]` badges.
+- **Pipeline Statistics Logging**: Tracks `Atlas Groups` found and `Atlas Meshes Imported` in console and summary reports.
+### Refactored & Fixed
+- **Decoupled 3-Phase Import Architecture**: Separated filesystem discovery, domain grouping, and task generation into clean, independent pipeline phases.
+- **Task-Asset Tuple Pairing**: Replaced uncoordinated list indices with direct `(asset, task)` tuple pairing, permanently resolving UDIM and batch import desynchronization.
+
+
 ## [1.4.0] - 2026-07-31
 ### Added
 - **UDIM Streaming Virtual Texture Support**: Automatically detects UDIM tile sequences (`_1001` through `_1999`) and imports them as single Streaming Virtual Textures. Secondary tile tasks are filtered to prevent import collisions.
