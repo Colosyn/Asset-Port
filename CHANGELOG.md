@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.1] - 2026-08-22
+### Added
+- Extended texture suffix recognition: `_metalness`, `_cavity`, `_specular`, `_gloss`, `_translucency`, `_bump`, `_rma` (PR #13 by @skywa1keri7)
+- Extension-based type inference for prefix-less marketplace assets (PR #13 by @skywa1keri7)
+- Resolution token stripping (`_2K`, `_4K`) to prevent false material-slot splits (PR #13 by @skywa1keri7)
+- Community Translations section in README — AssetPort-CN officially recommended
+
+### Fixed
+- Regex alternation now sorts longest-first, preventing ambiguous suffix/prefix matches (PR #13 by @skywa1keri7)
+- `OPACITY_MASK` textures now correctly use `TC_MASKS` compression with sRGB off (PR #13 by @skywa1keri7)
+- Missing newline at end of file in multiple modules
+
 ## [1.5.0] - 2026-08-22
 ### Added
 - **Atlas & Modular Kit Grouping**: Hyphen-delimited kit mesh detection (`SM_Mesh-KitName`) linking multiple static meshes to a single shared PBR texture set.
