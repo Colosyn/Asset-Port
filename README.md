@@ -107,6 +107,17 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 ## Documentation
 * [View Changelog](CHANGELOG.md)
 
+## 🌍 Community Translations
+
+| Language | Maintainer | Repository |
+|----------|-----------|------------|
+| 🇨🇳 简体中文 (Simplified Chinese) | [@skywa1keri7](https://github.com/skywa1keri7) | [AssetPort-CN](https://github.com/skywa1keri7/AssetPort-CN) |
+
+> [!NOTE]
+> AssetPort-CN provides a bilingual (CN/EN) interface while preserving English asset naming conventions. Officially recommended for Chinese-speaking users.
+
+*Community contributions from AssetPort-CN have been merged upstream — see [PR #13](https://github.com/Colosyn/Asset-Port/pull/13).*
+
 ## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
