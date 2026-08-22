@@ -28,9 +28,11 @@ SUFFIX_MAP ={
     "m" : TextureSlot.METALLIC,
     "metal" : TextureSlot.METALLIC,
     "metallic" : TextureSlot.METALLIC,
+    "metalness" : TextureSlot.METALLIC,
     
     "ao" : TextureSlot.AO,
     "ambientocclusion" : TextureSlot.AO,
+    "cavity" : TextureSlot.CAVITY,
     
     "e" : TextureSlot.EMISSIVE,
     "emissive" : TextureSlot.EMISSIVE,
@@ -40,13 +42,19 @@ SUFFIX_MAP ={
     
     "mask" : TextureSlot.OPACITY_MASK,
     "opacitymask" : TextureSlot.OPACITY_MASK,
+
+    "specular" : TextureSlot.SPECULAR,
+    "gloss" : TextureSlot.GLOSS,
+    "translucency" : TextureSlot.TRANSLUCENCY,
     
     "h" : TextureSlot.HEIGHT,
     "height" : TextureSlot.HEIGHT,
     "disp" : TextureSlot.HEIGHT,
     "displacement" : TextureSlot.HEIGHT,
+    "bump" : TextureSlot.HEIGHT,
     
     "orm" : TextureSlot.ORM,
+    "rma" : TextureSlot.RMA,
 }
 
 
@@ -62,9 +70,10 @@ class AssetDetector:
     
     def __init__(self) -> None:
         
-        prefix_pattern = "|".join(PREFIX_MAP.keys())
-        category_pattern = "|".join(CATEGORY_MAP.keys())
-        suffix_pattern = "|".join(SUFFIX_MAP.keys())
+        # Prefer longer aliases so overlapping names are parsed deterministically.
+        prefix_pattern = "|".join(sorted(PREFIX_MAP.keys(), key=len, reverse=True))
+        category_pattern = "|".join(sorted(CATEGORY_MAP.keys(), key=len, reverse=True))
+        suffix_pattern = "|".join(sorted(SUFFIX_MAP.keys(), key=len, reverse=True))
     
         pattern = (
             rf"^(?:(?P<prefix>{prefix_pattern})_)?"
@@ -90,6 +99,7 @@ class AssetDetector:
             stem = stem[:udim_match.start()]
         
         match = self.regax.match(stem)
+        inferred_type = self._infer_type(path_obj.suffix)
         
         if not match:
             return DetectedAsset(
@@ -98,7 +108,7 @@ class AssetDetector:
                 prefix="",
                 base_name=stem,
                 suffix="",
-                asset_type=AssetType.UNKNOWN,
+                asset_type=inferred_type,
                 texture_slot=None,
                 extension=path_obj.suffix,
                 category=None,
@@ -130,12 +140,18 @@ class AssetDetector:
             if material_raw.lower() in SUFFIX_MAP:
                 suffix_raw = material_raw
                 material_raw = None
+
+        # Marketplace filenames commonly include resolution metadata before the
+        # texture suffix (for example ``Rock_2K_BaseColor``). It is not a
+        # material-slot name and should not split the asset into a separate slot.
+        if material_raw and re.fullmatch(r"\d+[Kk]", material_raw):
+            material_raw = None
                 
         material_slot_name = material_raw if material_raw else None
         suffix = suffix_raw if suffix_raw else ""
             
         
-        asset_type = PREFIX_MAP.get(prefix, AssetType.UNKNOWN)
+        asset_type = PREFIX_MAP.get(prefix, inferred_type)
         
         category = CATEGORY_MAP.get(category_str, None) if category_str else None
         
@@ -162,6 +178,15 @@ class AssetDetector:
         
 
         return detected_asset
+
+    @staticmethod
+    def _infer_type(extension):
+        extension = extension.lower()
+        if extension in (".png", ".tga", ".jpg", ".exr"):
+            return AssetType.TEXTURE
+        if extension == ".fbx":
+            return AssetType.STATIC_MESH
+        return AssetType.UNKNOWN
         
         
     def group_assets(self, assets : list[DetectedAsset]) -> list[AssetGroup]:
@@ -169,6 +194,12 @@ class AssetDetector:
         groups = {}
         
         for asset in assets:
+            if asset.asset_type not in (
+                AssetType.TEXTURE,
+                AssetType.STATIC_MESH,
+                AssetType.SKELETAL_MESH,
+            ):
+                continue
             if asset.base_name not in groups:
                 groups[asset.base_name] = AssetGroup(
                     base_name= asset.base_name,
@@ -241,5 +272,3 @@ class AssetDetector:
             atlas_group.append(group)
             
         return atlas_group, remaining
-                
-                

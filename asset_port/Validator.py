@@ -50,7 +50,11 @@ def group_validator(group : AssetGroup):
     if TextureSlot.NORMAL not in found_texture:
         warnings.append(f"group {group.base_name} Normal map is missing")
         
-    if TextureSlot.ROUGHNESS not in found_texture and TextureSlot.ORM not in found_texture:
+    if (
+        TextureSlot.ROUGHNESS not in found_texture
+        and TextureSlot.ORM not in found_texture
+        and TextureSlot.RMA not in found_texture
+    ):
         warnings.append(f"group {group.base_name} Roughness or ORM map is missing ") 
         
         
@@ -74,7 +78,11 @@ def atlas_group_validator(group: AtlasGroup):
     if TextureSlot.NORMAL not in found_texture:
         warnings.append(f"group {group.kit_name} Normal map is missing")
             
-    if TextureSlot.ROUGHNESS not in found_texture and TextureSlot.ORM not in found_texture:
+    if (
+        TextureSlot.ROUGHNESS not in found_texture
+        and TextureSlot.ORM not in found_texture
+        and TextureSlot.RMA not in found_texture
+    ):
         warnings.append(f"group {group.kit_name} Roughness or ORM map is missing ") 
         
     if group.mesh_count== 1:
