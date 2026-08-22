@@ -16,10 +16,15 @@ class TextureSlot(Enum):
     ROUGHNESS = "Roughness"
     METALLIC = "Metallic"
     AO = "AmbientOcclusion"
+    CAVITY = "Cavity"
     EMISSIVE = "Emissive"
+    SPECULAR = "Specular"
+    GLOSS = "Gloss"
+    TRANSLUCENCY = "Translucency"
     OPACITY = "Opacity"
     OPACITY_MASK = "OpacityMask"
     ORM = "ORM"
+    RMA = "RMA"
     HEIGHT = "Height"
     UNKNOWN = "Unknown"
     
@@ -103,4 +108,3 @@ class PipelineReport:
     atlas_meshes_imported : int =0
     warnings : list[str] = field(default_factory=list)
     errors  : list[str] = field(default_factory=list)
-    

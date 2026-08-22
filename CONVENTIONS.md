@@ -40,7 +40,9 @@ Prefixes tell the tool what type of asset is being imported. This is case-insens
 | `t_` | Texture | `unreal.Texture2D` |
 | `a_` | Animation | `unreal.AnimSequence` |
 
-*If no prefix is found, the asset type defaults to `Unknown` and will not be automated.*
+*If no prefix is found, supported image extensions are inferred as textures and
+`.fbx` files are inferred as static meshes. Explicit prefixes still take
+priority and should be used for skeletal meshes and animations.*
 
 ---
 
@@ -70,11 +72,20 @@ Suffixes determine how textures are mapped inside the created **Material Instanc
 | `_n`, `_nrm`, `_normal` | **Normal** | `False` | `TC_Normalmap` |
 | `_r`, `_roughness`, `_rough` | **Roughness** | `False` | `TC_Masks` |
 | `_m`, `_metal`, `_metallic` | **Metallic** | `False` | `TC_Masks` |
+| `_metalness` | **Metallic** | `False` | `TC_Masks` |
 | `_ao`, `_ambientocclusion` | **AmbientOcclusion** (AO) | `False` | `TC_Masks` |
+| `_cavity` | **Cavity** | `False` | `TC_Masks` |
 | `_e`, `_emissive` | **Emissive** | `True` | `TC_Default` |
-| `_o`, `_opacity`, `_mask`, `_opacitymask` | **Opacity / Mask** | `False` | `TC_Alpha` |
-| `_h`, `_height`, `_disp`, `_displacement`  | **Height** | `False` | `TC_Masks` |
+| `_o`, `_opacity` | **Opacity** | `False` | `TC_Alpha` |
+| `_mask`, `_opacitymask` | **Opacity Mask** | `False` | `TC_Masks` |
+| `_specular`, `_gloss` | **Specular / Gloss** | `False` | `TC_Masks` |
+| `_translucency` | **Translucency** | `True` | `TC_Default` |
+| `_h`, `_height`, `_disp`, `_displacement`, `_bump`  | **Height** | `False` | `TC_Masks` |
 | `_orm` | **ORM** (Occlusion, Roughness, Metallic) | `False` | `TC_Masks` |
+| `_rma` | **RMA** (Roughness, Metallic, Ambient Occlusion) | `False` | `TC_Masks` |
+
+Resolution tokens such as `_2K_` and `_4K_` are treated as metadata rather
+than material-slot names when they appear before a recognized texture suffix.
 
 ### Special Material Features:
 * **ORM Textures:** If an `_orm` texture suffix is detected, the tool automatically turns on the static switch parameter **"UseORM"** in the material instance, allowing you to feed packed maps directly.
@@ -106,10 +117,15 @@ Ensure your Master Material defines texture parameters matching these exact name
 | Roughness | `Roughness` | The roughness map input |
 | Metallic | `Metallic` | The metallic map input |
 | Ambient Occlusion | `AmbientOcclusion` | The AO map input |
+| Cavity | `Cavity` | The cavity map input |
 | Emissive | `Emissive` | The emissive map input |
+| Specular | `Specular` | The specular map input |
+| Gloss | `Gloss` | The gloss map input |
+| Translucency | `Translucency` | The translucency map input |
 | Opacity | `Opacity` | The opacity / transparency input |
 | Height | `Height` | The height / displacement input |
 | ORM | `ORM` | The occlusion, roughness, and metallic packed input |
+| RMA | `RMA` | The roughness, metallic, and ambient-occlusion packed input |
 
 ### Static Switches
 

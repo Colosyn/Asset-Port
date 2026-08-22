@@ -40,13 +40,25 @@ def texture_settings(texture_asset, slot: TextureSlot):
         texture_asset.compression_settings =unreal.TextureCompressionSettings.TC_NORMALMAP
         
         
-    if slot in (TextureSlot.ROUGHNESS, TextureSlot.METALLIC, TextureSlot.AO, TextureSlot.ORM, TextureSlot.HEIGHT):
+    if slot in (
+        TextureSlot.ROUGHNESS,
+        TextureSlot.METALLIC,
+        TextureSlot.AO,
+        TextureSlot.CAVITY,
+        TextureSlot.SPECULAR,
+        TextureSlot.GLOSS,
+        TextureSlot.ORM,
+        TextureSlot.RMA,
+        TextureSlot.HEIGHT,
+        TextureSlot.OPACITY_MASK,
+    ):
         texture_asset.srgb = False
         texture_asset.compression_settings =unreal.TextureCompressionSettings.TC_MASKS
         
     if slot == TextureSlot.OPACITY:
         texture_asset.srgb = False
         texture_asset.compression_settings =unreal.TextureCompressionSettings.TC_ALPHA
-        
-    
-   
+
+    if slot == TextureSlot.TRANSLUCENCY:
+        texture_asset.srgb = True
+        texture_asset.compression_settings =unreal.TextureCompressionSettings.TC_DEFAULT
