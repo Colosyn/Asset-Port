@@ -9,6 +9,7 @@ def log_pipeline_report(report: PipelineReport, selected_path :str, dry_run = Fa
         unreal.log("===================================================")
         unreal.log(f"Scanned: {report.total_scanned}")
         unreal.log(f"would create MIs : {report.mis_created}")
+        unreal.log(f"Atlas Groups: {report.atlas_group_found}")
         unreal.log("===================================================")
         if report.warnings:
             for warning in report.warnings:
@@ -21,6 +22,7 @@ def log_pipeline_report(report: PipelineReport, selected_path :str, dry_run = Fa
         unreal.log("===================================================")
         unreal.log(f"Scanned: {report.total_scanned} | Imported: {report.asset_import}")
         unreal.log(f"MIs Created: {report.mis_created} | MIs Linked: {report.mis_linked}")
+        unreal.log(f"Atlas Groups: {report.atlas_group_found}")
         unreal.log("===================================================")
         if report.warnings:
             for warning in report.warnings:
@@ -50,6 +52,7 @@ def log_pipeline_report(report: PipelineReport, selected_path :str, dry_run = Fa
             f.write("AssetPort Import report\n")
             f.write(f"Scanned: {report.total_scanned}\n")
             f.write(f"Imported: {report.asset_import}\n")
+            f.write(f"Atlas Meshes imported: {report.atlas_meshes_imported}\n")
         
             if report.warnings:
                 for warning in report.warnings:
