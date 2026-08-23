@@ -16,8 +16,7 @@ def get_mesh_setting(asset: DetectedAsset):
         
     elif asset.asset_type == AssetType.SKELETAL_MESH:
       fbx.mesh_type_to_import = unreal.FBXImportType.FBXIT_SKELETAL_MESH  
-      skeletal_mesh = fbx.skeletal_mesh_import_data
-      skeletal_mesh.import_content_type =  unreal.FBXImportContentType.FBXICT_GEOMETRY
+      fbx.import_as_skeletal = True
       
     else:
         fbx.mesh_type_to_import = unreal.FBXImportType.FBXIT_STATIC_MESH
