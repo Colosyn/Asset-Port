@@ -2,6 +2,19 @@ import unreal
 from asset_port.models import AssetGroup , MaterialBuildResult, TextureSlot, AtlasGroup
 from asset_port.config import ImporterSettings
 
+def assign_material_to_mesh(mesh_obj, slot_idx:int, mi):
+    # assings a materail instance to either a StaticMesh or SkeletalMesh slot
+    if isinstance(mesh_obj, unreal.SkeletalMesh):
+        mats = mesh_obj.get_editor_property("materials")
+        if slot_idx < len(mats):
+            new_mat = unreal.SkeletalMaterial()
+            new_mat.set_editor_property("material_interface",mi)
+            new_mat.set_editor_property("material_slot_name", mats[slot_idx].get_editor_property("material_slot_name"))
+            mats[slot_idx] = new_mat
+            mesh_obj.set_editor_property("materials", mats)
+    elif isinstance(mesh_obj, unreal.StaticMesh):
+        mesh_obj.set_material(slot_idx, mi)
+        
 def create_material_instance(group : AssetGroup, config: ImporterSettings, decisions: dict = None):
 
     folder_path = group.folder_path
@@ -116,17 +129,20 @@ def create_material_instance(group : AssetGroup, config: ImporterSettings, decis
         
         if mesh_object:
             if group.is_multi_material:
-                static_mats = mesh_object.get_editor_property("static_materials")
-                for idx ,mat_slot in enumerate(static_mats):
+                if isinstance(mesh_object, unreal.SkeletalMesh):
+                    mesh_mats = mesh_object.get_editor_property("materials")
+                else:
+                    mesh_mats = mesh_object.get_editor_property("static_materials")
+                for idx ,mat_slot in enumerate(mesh_mats):
                     slot_str = str(mat_slot.get_editor_property("material_slot_name"))
                     
                     if slot_name.lower() in slot_str.lower() or slot_str.lower() in slot_name.lower():
-                        mesh_object.set_material(idx, mi)
+                        assign_material_to_mesh(mesh_object, idx, mi)
                         unreal.log(f"AssetPort: Assigned {mi_name} to slot [{idx}]'{slot_name}'")
                         break
                     
             else:
-                mesh_object.set_material(0,mi)
+               assign_material_to_mesh(mesh_object,0, mi)
                 
             unreal.EditorAssetLibrary.save_loaded_asset(mesh_object)
             material_report.mesh_linked = group.mesh.base_name
