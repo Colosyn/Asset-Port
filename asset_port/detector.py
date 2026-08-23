@@ -5,8 +5,10 @@ import re
 PREFIX_MAP = {
     "sm": AssetType.STATIC_MESH,
     "sk": AssetType.SKELETAL_MESH,
+    "skm": AssetType.SKELETAL_MESH,
     "t": AssetType.TEXTURE,
     "a": AssetType.ANIMATION,
+    "anim": AssetType.ANIMATION,
     }
 
 SUFFIX_MAP ={
@@ -15,7 +17,9 @@ SUFFIX_MAP ={
     "d": TextureSlot.BASE_COLOUR,
     "diffuse" : TextureSlot.BASE_COLOUR,
     "albedo": TextureSlot.BASE_COLOUR,
+    "alb": TextureSlot.BASE_COLOUR,
     "basecolor": TextureSlot.BASE_COLOUR,
+    
     
     "n": TextureSlot.NORMAL,
     "nrm": TextureSlot.NORMAL,
@@ -54,6 +58,8 @@ SUFFIX_MAP ={
     "bump" : TextureSlot.HEIGHT,
     
     "orm" : TextureSlot.ORM,
+    "arm" : TextureSlot.ORM,
+    
     "rma" : TextureSlot.RMA,
 }
 
