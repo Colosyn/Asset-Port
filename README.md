@@ -9,7 +9,7 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 ---
 ## Demo
 
-[<img src="https://img.youtube.com/vi/Cm26pc_Ob-U/maxresdefault.jpg" width="800">](https://youtu.be/EEpK49R8tIo)
+[<img src="https://img.youtube.com/vi/8COCp4ntF4A/maxresdefault.jpg" width="800">](https://youtu.be/8COCp4ntF4A)
 
 ## Key Features
 
