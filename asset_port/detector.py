@@ -234,6 +234,13 @@ class AssetDetector:
             if asset.category:
                 group.category = asset.category
         
+        for group in groups.values():
+            if group.category:
+                if group.mesh:
+                    group.mesh.category = group.category
+                for tex in group.texture_list:
+                    tex.category = group.category
+        
         return list(groups.values())
             
             
