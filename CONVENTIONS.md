@@ -36,9 +36,9 @@ Prefixes tell the tool what type of asset is being imported. This is case-insens
 | Prefix | Asset Type | Destination Unreal Class |
 | :--- | :--- | :--- |
 | `sm_` | Static Mesh | `unreal.StaticMesh` |
-| `sk_` | Skeletal Mesh | `unreal.SkeletalMesh` |
+| `sk_`, `skm_` | Skeletal Mesh | `unreal.SkeletalMesh` |
 | `t_` | Texture | `unreal.Texture2D` |
-| `a_` | Animation | `unreal.AnimSequence` |
+| `a_`, `anim_` | Animation | `unreal.AnimSequence` |
 
 *If no prefix is found, supported image extensions are inferred as textures and
 `.fbx` files are inferred as static meshes. Explicit prefixes still take
@@ -56,7 +56,10 @@ Categories determine the subfolder under `/Game/` where the assets will be store
 | `wpn_` | Weapons | `/Game/Weapons/[BaseName]/` |
 | `prop_` | Props | `/Game/Props/[BaseName]/` |
 | `char_` | Characters | `/Game/Characters/[BaseName]/` |
+| `veh_` | Vehicles | `/Game/Vehicles/[BaseName]/` |
+| `fx_` | Effects | `/Game/Effects/[BaseName]/` |
 
+* **Category Inheritance:** In asset groups (including UDIM sequences) or modular kits, tagging just ONE file with a category prefix (e.g., `SM_env_Chest.fbx` or `T_prop_RockKit_D.png`) automatically propagates that category to all other meshes and textures in the group.
 * **Dropdown Override:** You can override this auto-sorting in the tool UI by selecting an explicit category.
 * **Unsorted Fallback:** If no tag is matched and no override is selected, assets are routed to `/Game/_Unsorted/[BaseName]/`.
 
@@ -68,7 +71,7 @@ Suffixes determine how textures are mapped inside the created **Material Instanc
 
 | Suffix | Texture Slot / Parameter | sRGB | Compression Setting |
 | :--- | :--- | :--- | :--- |
-| `_b`, `_basecolour`, `_d`, `_diffuse`, `_albedo`, `_basecolor` | **BaseColour** | `True` | `TC_Default` |
+| `_b`, `_basecolour`, `_d`, `_diffuse`, `_albedo`, `_basecolor`, `_alb` | **BaseColour** | `True` | `TC_Default` |
 | `_n`, `_nrm`, `_normal` | **Normal** | `False` | `TC_Normalmap` |
 | `_r`, `_roughness`, `_rough` | **Roughness** | `False` | `TC_Masks` |
 | `_m`, `_metal`, `_metallic` | **Metallic** | `False` | `TC_Masks` |
@@ -81,7 +84,7 @@ Suffixes determine how textures are mapped inside the created **Material Instanc
 | `_specular`, `_gloss` | **Specular / Gloss** | `False` | `TC_Masks` |
 | `_translucency` | **Translucency** | `True` | `TC_Default` |
 | `_h`, `_height`, `_disp`, `_displacement`, `_bump`  | **Height** | `False` | `TC_Masks` |
-| `_orm` | **ORM** (Occlusion, Roughness, Metallic) | `False` | `TC_Masks` |
+| `_orm`, `_arm` | **ORM** (Occlusion, Roughness, Metallic) | `False` | `TC_Masks` |
 | `_rma` | **RMA** (Roughness, Metallic, Ambient Occlusion) | `False` | `TC_Masks` |
 
 Resolution tokens such as `_2K_` and `_4K_` are treated as metadata rather

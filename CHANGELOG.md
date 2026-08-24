@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.2] - 2026-08-24
+### Added
+- **Group Category Inheritance**: Textures in an asset group now automatically inherit the category prefix from the mesh (or vice versa), preventing folder routing desynchronization (Fixes #14).
+- **Consensus Category Resolution for Atlas Kits**: Atlas kits now search across all member meshes and textures for category tags, applying the detected category across the entire kit (Fixes #15).
+- **Extended Category Support**: Added `_veh_` (`Vehicles`) and `_fx_` (`Effects`) categories and aligned router folder path fallbacks.
+- **FAB & Marketplace Naming Support**: Added `skm_` (SkeletalMesh) and `anim_` (Animation) prefixes, along with `_arm` (packed ORM) and `_alb` (Albedo) texture suffixes.
+- **Category Unit Test Suite**: Added `tests/test_category_inheritance.py` expanding test coverage to 7 passing unit tests.
+
+### Fixed
+- **SkeletalMesh Import Crash**: Resolved Python `AttributeError` on `FbxSkeletalMeshImportData.import_content_type` during skeletal mesh configuration (Fixes #16).
+- **SkeletalMesh Multi-Material Slot Binding**: Fixed multi-material slot assignment on SkeletalMeshes by reconstructing `unreal.SkeletalMaterial` arrays (Fixes #18).
+- **UI Dropdown Defaults**: Changed default category dropdown in `EUW_AssetPort` to `Auto-Detect` and added `Vehicles` and `Effects` options.
+
 ## [1.5.1] - 2026-08-22
 ### Added
 - Extended texture suffix recognition: `_metalness`, `_cavity`, `_specular`, `_gloss`, `_translucency`, `_bump`, `_rma` (PR #13 by @skywa1keri7)
