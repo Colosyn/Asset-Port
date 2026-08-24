@@ -69,6 +69,8 @@ CATEGORY_MAP ={
     "wpn" : "Weapons",
     "prop" : "Props",
     "char" : "Characters",
+    "veh" : "Vehicles",
+    "fx" : "Effects",
 
 }
 
