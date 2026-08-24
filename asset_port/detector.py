@@ -69,6 +69,8 @@ CATEGORY_MAP ={
     "wpn" : "Weapons",
     "prop" : "Props",
     "char" : "Characters",
+    "veh" : "Vehicles",
+    "fx" : "Effects",
 
 }
 
@@ -234,6 +236,13 @@ class AssetDetector:
             if asset.category:
                 group.category = asset.category
         
+        for group in groups.values():
+            if group.category:
+                if group.mesh:
+                    group.mesh.category = group.category
+                for tex in group.texture_list:
+                    tex.category = group.category
+        
         return list(groups.values())
             
             
@@ -269,11 +278,18 @@ class AssetDetector:
         atlas_group = []
         
         for kit_name, meshes in kit_meshes.items():
+            all_kit_assets = meshes + kit_textures.get(kit_name, [])
+            kit_category = next((a.category for a in all_kit_assets if a.category), None)
+            
+            if kit_category:
+                for asset in all_kit_assets:
+                    asset.category = kit_category
+                    
             group = AtlasGroup(
                 kit_name=kit_name,
                 mesh_list=meshes,
                 texture_list=kit_textures.get(kit_name,[]),
-                category=meshes[0].category,
+                category=kit_category,
             )
             atlas_group.append(group)
             

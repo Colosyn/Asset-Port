@@ -63,7 +63,7 @@ To install AssetPort, place the script files and assets inside your Unreal Engin
 2. Click **Browse** and select a folder on your computer containing the meshes and textures you want to import.
 3. Select an option from the **Category Dropdown**:
    * **Auto-Detect (Recommended)**: Auto-detects categories based on file prefixes.
-   * **Weapon/Environment/Props/Character**: Overrides detection and forces all assets into the selected category.
+   * **Weapons/Environment/Props/Characters/Vehicles/Effects**: Overrides detection and forces all assets into the selected category.
 4. **Choose your path**:
    * Click **Preview**: Runs a simulation scan and opens a collapsible tree UI. If it looks correct, click **Confirm Import** at the bottom, or **Cancel** to abort.
    * Click **Import**: Directly runs the import pipeline.
