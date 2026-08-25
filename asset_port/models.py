@@ -47,6 +47,7 @@ class DetectedAsset:
     tile_count : int = 1
     kit_name: Optional[str] = None
     ue_asset_name: Optional[str] = None
+    lod_index: Optional[int] = None
     @property
     def is_udim(self) -> bool:
         return self.udim_tile is not None
@@ -63,6 +64,7 @@ class AssetGroup:
     material_slots : dict[str, list[DetectedAsset]] = field(default_factory=dict)
     category : Optional[str] = None
     folder_path : Optional[str] = None
+    lod_meshes : list[DetectedAsset] = field(default_factory=list)
     @property
     def is_multi_material(self) -> bool:
         return len(self.material_slots) > 1
@@ -74,6 +76,7 @@ class AtlasGroup:
     texture_list: list[DetectedAsset] = field(default_factory=list)
     category : Optional[str] = None
     folder_path: Optional[str] = None   
+    lod_meshes: dict[str, list[DetectedAsset]] = field(default_factory=dict)
     
     @property
     def mesh_count(self) -> int:
@@ -106,5 +109,6 @@ class PipelineReport:
     mis_linked : int = 0
     atlas_group_found : int =0
     atlas_meshes_imported : int =0
+    lods_imported : int = 0
     warnings : list[str] = field(default_factory=list)
     errors  : list[str] = field(default_factory=list)

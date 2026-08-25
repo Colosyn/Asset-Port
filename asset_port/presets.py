@@ -1,7 +1,7 @@
 import unreal
 from asset_port.models import DetectedAsset, AssetType, TextureSlot
 
-def get_mesh_setting(asset: DetectedAsset):
+def get_mesh_setting(asset: DetectedAsset, import_lods=True):
     
     fbx = unreal.FbxImportUI()
     
@@ -11,6 +11,12 @@ def get_mesh_setting(asset: DetectedAsset):
     if asset.asset_type == AssetType.STATIC_MESH :
         fbx.mesh_type_to_import = unreal.FBXImportType.FBXIT_STATIC_MESH
         static_mesh = fbx.static_mesh_import_data
+        # Import LOD groups embedded in a single FBX. Separate _LOD files are
+        # attached after the base mesh has been imported.
+        try:
+            static_mesh.import_mesh_lods = bool(import_lods)
+        except Exception:
+            pass
         static_mesh.combine_meshes = True
         static_mesh.generate_lightmap_u_vs = True
         
