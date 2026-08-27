@@ -106,7 +106,7 @@ class AssetDetector:
         if path_obj.suffix.lower() == ".fbx":
             lod_match = re.search(r"_LOD(?P<index>\d+)$", stem, re.IGNORECASE)
             if lod_match:
-                lod_index = int(lod_match.group("index"))
+                parsed_index = int(lod_match.group("index"))
                 if parsed_index <= 7:
                     lod_index = parsed_index
                     stem = stem[:lod_match.start()]
