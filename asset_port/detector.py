@@ -107,7 +107,10 @@ class AssetDetector:
             lod_match = re.search(r"_LOD(?P<index>\d+)$", stem, re.IGNORECASE)
             if lod_match:
                 lod_index = int(lod_match.group("index"))
-                stem = stem[:lod_match.start()]
+                if parsed_index <= 7:
+                    lod_index = parsed_index
+                    stem = stem[:lod_match.start()]
+                    # Any index > 7 will leave lod_index =None and prwserve the original stem
         
         udim_tile = None
         udim_match = re.search(r"_(1[0-9]{3})$", stem)
