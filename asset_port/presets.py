@@ -67,3 +67,34 @@ def texture_settings(texture_asset, slot: TextureSlot):
     if slot == TextureSlot.TRANSLUCENCY:
         texture_asset.srgb = True
         texture_asset.compression_settings =unreal.TextureCompressionSettings.TC_DEFAULT
+
+def evaluate_smart_nanite(mesh_obj, group, config, blend_mode = "Opaque") -> bool:
+    
+    if not getattr(config, "smart_nanite", True):
+        return False
+    if not isinstance(mesh_obj, unreal.StaticMesh):
+        return False
+    if group.lod_meshes or mesh_obj.get_num_lods() > 1:
+        return False
+    if blend_mode in ("Masked", "Translucent"):
+        return False
+    min_tris = getattr(config, "nanite_min_triangles", 2500)
+    if mesh_obj.get_num_triangles(0) <= min_tris:
+        return False
+    
+    return True
+
+
+def apply_nanite_settings(mesh_obj, enabled: bool):
+    nanite = mesh_obj.get_editor_property("nanite_settings")
+    nanite.enabled = enabled
+
+    subsystem = unreal.get_editor_subsystem(unreal.StaticMeshEditorSubsystem)
+    if subsystem and hasattr(subsystem, "set_nanite_settings"):
+        subsystem.set_nanite_settings(mesh_obj, nanite, apply_changes=True)
+        return
+
+    # fallback
+    mesh_obj.set_editor_property("nanite_settings", nanite)
+    unreal.log_warning(f"Nanite subsystem unavailable — settings applied to {mesh_obj.get_name()} but build not triggered")
+    

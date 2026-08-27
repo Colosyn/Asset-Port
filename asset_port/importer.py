@@ -2,7 +2,7 @@ import unreal
 from pathlib import Path
 from asset_port.detector import AssetDetector
 from asset_port.router import AssetRouter
-from asset_port.presets import get_mesh_setting, texture_settings
+from asset_port.presets import get_mesh_setting, texture_settings, evaluate_smart_nanite, apply_nanite_settings
 from asset_port.models import AssetType, PipelineReport, TextureSlot, AtlasGroup
 from asset_port.Validator import asset_validator, group_validator, atlas_group_validator
 from asset_port.config import config_loader
@@ -72,8 +72,29 @@ class AssetImporter():
         for group in group_asset:
             if isinstance(group, AtlasGroup):
                 mi_report = create_atlas_material_instance(group, self.config, decisions)
+                blend_mode = decisions.get(f"MI_{group.kit_name}", "Opaque") if decisions else "Opaque"
+                for mesh in group.mesh_list:
+                    if mesh.ue_path:
+                        mesh_obj = unreal.EditorAssetLibrary.load_asset(mesh.ue_path)
+                        if mesh_obj and evaluate_smart_nanite(mesh_obj, group, self.config, blend_mode):
+                            apply_nanite_settings(mesh_obj, True)
+                            unreal.EditorAssetLibrary.save_loaded_asset(mesh_obj)
+                            
             else:
                 mi_report = create_material_instance(group, self.config, decisions)
+                
+                if group.mesh and group.mesh.ue_path:
+                    mesh_obj = unreal.EditorAssetLibrary.load_asset(group.mesh.ue_path)
+                    if group.is_multi_material:
+                        is_transparent = any(decisions.get(f"MI_{group.base_name}_{slot}", "Opaque") in ("Masked", "Translucent")
+                        for slot in group.material_slots) if decisions else False
+                        blend_mode = "Masked" if is_transparent else "Opaque"
+                    else:
+                        blend_mode = decisions.get(f"MI_{group.base_name}", "Opaque") if decisions else "Opaque"
+                    if mesh_obj and evaluate_smart_nanite(mesh_obj,group,self.config, blend_mode):
+                        apply_nanite_settings(mesh_obj,True)
+                        unreal.EditorAssetLibrary.save_loaded_asset(mesh_obj)
+                        
             if report and mi_report.success:
                 report.mis_created += 1
                 if mi_report.mesh_linked:

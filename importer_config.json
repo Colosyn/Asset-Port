@@ -6,5 +6,7 @@
     "auto_assign_to_mesh": true,
     "replace_existing": false,
     "organize_asset": true,
-    "auto_import_lods": true
+    "auto_import_lods": true,
+    "smart_nanite":true,
+    "nanite_min_triangles": 2500   
 }
