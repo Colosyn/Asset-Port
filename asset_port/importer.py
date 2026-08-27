@@ -285,8 +285,11 @@ class AssetImporter():
                     slow_task.enter_progress_frame(
                         1,
                         f"Importing LOD{lod_asset.lod_index}: {mesh_asset.base_name}",
-                    )
-                    self._import_static_mesh_lod(mesh_asset, lod_asset, report)
+                    ) 
+                    success = self._import_static_mesh_lod(mesh_asset, lod_asset, report)
+                    if not success:
+                        report.warnings.append(f"LOD import failed for {mesh_asset.base_name}, skipping remaining LODs.")
+                        break
 
             for asset, task in task_pairs:
                 if slow_task.should_cancel():
