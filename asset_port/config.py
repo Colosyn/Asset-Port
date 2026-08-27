@@ -12,6 +12,8 @@ class ImporterSettings():
     replace_existing : bool = False
     organize_asset : bool = True
     auto_import_lods : bool = True
+    smart_nanite: bool = True
+    nanite_min_triangles: int = 2500
 
 def config_loader():
     
