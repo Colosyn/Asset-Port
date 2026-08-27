@@ -11,6 +11,7 @@ class ImporterSettings():
     auto_assign_to_mesh : bool = True
     replace_existing : bool = False
     organize_asset : bool = True
+    auto_import_lods : bool = True
 
 def config_loader():
     

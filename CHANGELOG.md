@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+### Added
+- **Static Mesh LOD Import**: Enabled embedded FBX LOD groups and separate `_LOD0`, `_LOD1`, ... files for regular and Atlas Static Mesh assets.
+
 ## [1.5.2] - 2026-08-24
 ### Added
 - **Group Category Inheritance**: Textures in an asset group now automatically inherit the category prefix from the mesh (or vice versa), preventing folder routing desynchronization (Fixes #14).

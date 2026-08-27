@@ -78,11 +78,59 @@ class AssetImporter():
                 report.mis_created += 1
                 if mi_report.mesh_linked:
                     report.mis_linked += 1
+
+    def _import_static_mesh_lod(self, mesh_asset, lod_asset, report):
+        """Attach a separately exported FBX to an imported Static Mesh LOD."""
+        if not self.config.auto_import_lods:
+            return False
+        if mesh_asset.asset_type != AssetType.STATIC_MESH:
+            report.warnings.append(
+                f"LOD{lod_asset.lod_index} skipped for non-static mesh {mesh_asset.base_name}"
+            )
+            return False
+
+        static_mesh = unreal.EditorAssetLibrary.load_asset(mesh_asset.ue_path)
+        if static_mesh is None:
+            report.errors.append(f"Could not load base mesh for LOD import: {mesh_asset.ue_path}")
+            return False
+
+        result = -1
+        try:
+            subsystem_class = getattr(unreal, "StaticMeshEditorSubsystem", None)
+            subsystem = unreal.get_editor_subsystem(subsystem_class) if subsystem_class else None
+            if subsystem and hasattr(subsystem, "import_lod"):
+                result = subsystem.import_lod(
+                    static_mesh, int(lod_asset.lod_index), lod_asset.source_path
+                )
+            else:
+                legacy = getattr(unreal, "EditorStaticMeshLibrary", None)
+                if legacy and hasattr(legacy, "import_lod"):
+                    result = legacy.import_lod(
+                        static_mesh, int(lod_asset.lod_index), lod_asset.source_path
+                    )
+        except Exception as error:
+            report.errors.append(
+                f"LOD{lod_asset.lod_index} import failed for {mesh_asset.base_name}: {error}"
+            )
+            return False
+
+        success = result if isinstance(result, bool) else result is not None and int(result) >= 0
+        if not success:
+            report.errors.append(
+                f"LOD{lod_asset.lod_index} import failed for {mesh_asset.base_name}"
+            )
+            return False
+
+        lod_asset.ue_path = mesh_asset.ue_path
+        unreal.EditorAssetLibrary.save_loaded_asset(static_mesh)
+        report.lods_imported += 1
+        return True
         
     def import_directory(self, source_dir, category, dry_run = False):
         report = PipelineReport()
         file_path = Path(source_dir)
         task_pairs = []
+        lod_pairs = []
         detect_group = []
         for file in file_path.rglob("*"):
             if file.is_dir():
@@ -127,9 +175,16 @@ class AssetImporter():
                     task.save = True
                                         
                     if mesh.extension.lower() == ".fbx" or mesh.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
-                        task.options = get_mesh_setting(mesh)
+                        task.options = get_mesh_setting(mesh, self.config.auto_import_lods)
                                     
                     task_pairs.append((mesh, task))
+                mesh_key = mesh.ue_asset_name or mesh.base_name
+                for lod_asset in sorted(
+                    atlas_group.lod_meshes.get(mesh_key, []),
+                    key=lambda item: item.lod_index,
+                ):
+                    lod_asset.ue_path = asset_path
+                    lod_pairs.append((mesh, lod_asset))
             for texture in atlas_group.texture_list:
                 folder, asset_path = self.router.get_atlas_folder_path(texture, atlas_group,category)
                 texture.ue_path = asset_path
@@ -171,7 +226,7 @@ class AssetImporter():
                     task.save = True
                     
                     if asset.extension.lower() == ".fbx" or asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
-                        task.options = get_mesh_setting(asset)
+                        task.options = get_mesh_setting(asset, self.config.auto_import_lods)
                 
                     task_pairs.append((asset, task)) 
             
@@ -181,6 +236,11 @@ class AssetImporter():
                 if folder_parts and folder_parts[-1] == "Textures":
                     folder_parts = folder_parts[:-1]
                 group.folder_path = "/".join(folder_parts)   
+
+                if group.mesh:
+                    for lod_asset in sorted(group.lod_meshes, key=lambda item: item.lod_index):
+                        lod_asset.ue_path = group.mesh.ue_path
+                        lod_pairs.append((group.mesh, lod_asset))
                         
                 group_warnings = group_validator(group)
                 if group_warnings:
@@ -205,18 +265,32 @@ class AssetImporter():
         report.atlas_meshes_imported = sum(g.mesh_count for g in atlas_groups)
         if dry_run:
             report.asset_import = len(detect_group)
+            report.lods_imported = len(lod_pairs) if self.config.auto_import_lods else 0
             if self.config.auto_create_mi:
                 report.mis_created = len(group_asset) + len(atlas_groups)
                 report.mis_linked = sum(1 for g in group_asset if g.mesh is not None)
         
             return all_group, report    
             
-        total_steps = len(detect_group) + (len(all_group) if self.config.auto_create_mi else 0)
+        lod_steps = len(lod_pairs) if self.config.auto_import_lods else 0
+        total_steps = len(task_pairs) + lod_steps + (len(all_group) if self.config.auto_create_mi else 0)
         
         with unreal.ScopedSlowTask(total_steps, "Processing Imported assets...") as slow_task:
             slow_task.make_dialog(True)
-                
-    
+
+            if self.config.auto_import_lods:
+                for mesh_asset, lod_asset in lod_pairs:
+                    if slow_task.should_cancel():
+                        break
+                    slow_task.enter_progress_frame(
+                        1,
+                        f"Importing LOD{lod_asset.lod_index}: {mesh_asset.base_name}",
+                    ) 
+                    success = self._import_static_mesh_lod(mesh_asset, lod_asset, report)
+                    if not success:
+                        report.warnings.append(f"LOD import failed for {mesh_asset.base_name}, skipping remaining LODs.")
+                        break
+
             for asset, task in task_pairs:
                 if slow_task.should_cancel():
                     break
@@ -241,6 +315,6 @@ class AssetImporter():
             if len(task.get_objects()) ==0:
                 report.asset_failed += 1
         
-        report.asset_import = successful_imports
+        report.asset_import = successful_imports + report.lods_imported
         
-        return all_group, report 
+        return all_group, report

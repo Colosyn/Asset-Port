@@ -26,6 +26,14 @@ Mesh:    [Prefix]_[Category]_[IndividualName]-[KitName].[extension]
 Texture: [Prefix]_[Category]_[KitName]_[Suffix].[extension]
 ```
 *Example*: `SM_env_Rock01-RockKit.fbx`, `SM_env_Rock02-RockKit.fbx`, `T_env_RockKit_D.png`, `T_env_RockKit_ORM.png`
+
+### Separate Static Mesh LODs:
+```text
+[StaticMeshName]_LOD0.fbx
+[StaticMeshName]_LOD1.fbx
+[StaticMeshName]_LOD2.fbx
+```
+*Example*: `SM_env_Rock_LOD0.fbx`, `SM_env_Rock_LOD1.fbx`. An unsuffixed base mesh such as `SM_env_Rock.fbx` can also be paired with `_LOD1` and later files. Atlas LODs place the marker after the kit name, for example `SM_env_Rock01-RockKit_LOD1.fbx`.
 ---
 
 
@@ -150,3 +158,11 @@ AssetPort supports texture atlas workflows where multiple static meshes share a 
 4. **Flat Folder Routing**: All kit meshes, textures, and the shared Material Instance are placed flat inside `/Game/[Category]/[KitName]/`.
 > [!IMPORTANT]
 > **Hyphen Constraint:** Do not use hyphens (`-`) in standard non-kit asset filenames, as AssetPort treats hyphens as the kit separator.
+
+## 7. Static Mesh LOD Behavior
+
+1. FBX LOD groups embedded in a single file are enabled automatically.
+2. Separately exported files ending in `_LOD0`, `_LOD1`, and later indices are grouped with the base Static Mesh and attached after its import.
+3. An unsuffixed base mesh takes priority if both it and `_LOD0` are present.
+4. Separate-file attachment currently targets Static Meshes; Skeletal Meshes stay on their existing import path.
+5. Set `"auto_import_lods": false` in `importer_config.json` to skip both embedded and separate-file LOD import.

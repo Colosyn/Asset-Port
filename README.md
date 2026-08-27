@@ -34,6 +34,7 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 * **🧩 UDIM & Virtual Texture Support**: Automatically detects UDIM tile sequences (`_1001` to `_1999`) and 4K Auto-VTs, routes them to dedicated Virtual Texture parameters, and displays tile counts inline in the Preview window (`[UDIM: 6 Tiles]`). 
 
 * **🏺 Atlas & Modular Kit Detection**: Automatically detects kit-based asset groups using hyphen delimiters (e.g. `SM_Rock01-RockKit.fbx`). Unifies all kit meshes under a flat folder (`/Game/Environment/RockKit/`), cleans asset names on import (`SM_Rock01`), shares a single Material Instance (`MI_RockKit`) across all meshes at slot 0, and badges kit summaries in the Preview UI (`[Atlas: X Meshes]`).
+* **📐 Static Mesh LOD Import**: Imports LOD groups embedded in one FBX and attaches separately exported `_LOD0`, `_LOD1`, ... FBX files to regular or Atlas Static Meshes.
 
 
 ---
@@ -93,6 +94,7 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
     "master_translucent": "/Game/Python/Materials/M_Master_Translucent",
     "auto_create_mi": true,
     "auto_assign_to_mesh": true,
+    "auto_import_lods": true,
     "replace_existing": false,
     "organize_asset": true
 }
@@ -101,6 +103,7 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 * **`master_opaque` / `master_masked` / `master_translucent`**: Paths to your Master Materials. By default, they point to the included materials under `/Game/Python/Materials/`.
 * **`auto_create_mi`**: Automatically generate a Material Instance for textures.
 * **`auto_assign_to_mesh`**: Link the created Material Instance to the imported mesh.
+* **`auto_import_lods`**: Import embedded FBX LOD groups and attach separate `_LOD#` Static Mesh files.
 * **`replace_existing`**: If true, overwrites any existing Material Instances with the same name.
 
 ---
