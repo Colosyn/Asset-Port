@@ -35,6 +35,7 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 
 * **🏺 Atlas & Modular Kit Detection**: Automatically detects kit-based asset groups using hyphen delimiters (e.g. `SM_Rock01-RockKit.fbx`). Unifies all kit meshes under a flat folder (`/Game/Environment/RockKit/`), cleans asset names on import (`SM_Rock01`), shares a single Material Instance (`MI_RockKit`) across all meshes at slot 0, and badges kit summaries in the Preview UI (`[Atlas: X Meshes]`).
 * **📐 Static Mesh LOD Import**: Imports LOD groups embedded in one FBX and attaches separately exported `_LOD0`, `_LOD1`, ... FBX files to regular or Atlas Static Meshes.
+* **⚡ Smart Nanite Automation**: Intelligently evaluates mesh polygon counts against a configurable threshold (default: 2,500 triangles). Automatically enables Nanite for dense opaque meshes while preserving traditional LOD chains and non-Nanite transparent materials.
 
 
 ---
@@ -89,12 +90,14 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 
 ```json
 {
-    "master_opaque": "/Game/Python/Materials/M_Master_Opaque",
-    "master_masked": "/Game/Python/Materials/M_Master_Masked",
-    "master_translucent": "/Game/Python/Materials/M_Master_Translucent",
+    "parent_material_opaque": "/Game/Python/Materials/M_Master_Opaque",
+    "parent_material_masked": "/Game/Python/Materials/M_Master_Masked",
+    "parent_material_translucent": "/Game/Python/Materials/M_Master_Translucent",
     "auto_create_mi": true,
     "auto_assign_to_mesh": true,
     "auto_import_lods": true,
+    "smart_nanite": true,
+    "nanite_min_triangles": 2500,
     "replace_existing": false,
     "organize_asset": true
 }
@@ -119,7 +122,7 @@ You can edit `importer_config.json` inside your project's `Content/Python/` fold
 > [!NOTE]
 > AssetPort-CN provides a bilingual (CN/EN) interface while preserving English asset naming conventions. Officially recommended for Chinese-speaking users.
 
-*Community contributions from AssetPort-CN have been merged upstream — see [PR #13](https://github.com/Colosyn/Asset-Port/pull/13).*
+*Community contributions from AssetPort-CN have been merged upstream - see [PR #13](https://github.com/Colosyn/Asset-Port/pull/13) (Extended Texture Suffixes) and [PR #20](https://github.com/Colosyn/Asset-Port/pull/20) (Static Mesh LOD Import).*
 
 ## License
 
@@ -127,7 +130,7 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 
 ## Roadmap
 
-Feature planning and upcoming development tracked on the [Project Board](https://github.com/Colosyn/Asset-Port/projects).
+Feature planning and upcoming development tracked on the [Project Board](https://github.com/users/Colosyn/projects/1).
 
 ## Contributing
 
