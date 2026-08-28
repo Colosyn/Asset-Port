@@ -1,8 +1,12 @@
 # Changelog
 
-## Unreleased
+## [1.6.0] - 2026-08-28
+
 ### Added
-- **Static Mesh LOD Import**: Enabled embedded FBX LOD groups and separate `_LOD0`, `_LOD1`, ... files for regular and Atlas Static Mesh assets.
+- **Static Mesh LOD Import**: Automatically imports embedded FBX LOD groups and attaches separate-file `_LOD0`, `_LOD1`, ... FBX files to standard and Atlas Static Meshes (PR #20 by @skywa1keri7).
+- **Smart Nanite Automation**: Automatically evaluates mesh polygon density (`nanite_min_triangles`), material blend modes (skips masked/translucent), and existing custom LODs to dynamically configure Nanite during the post-import pass.
+- **Configurable Optimization Settings**: Added `smart_nanite` and `nanite_min_triangles` parameters to `importer_config.json` and `ImporterSettings`.
+- **Pipeline Metric Tracking**: Added `lods_imported` counter to console summaries and dry-run preview simulation reports.
 
 ## [1.5.2] - 2026-08-24
 ### Added

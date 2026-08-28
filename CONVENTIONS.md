@@ -166,3 +166,10 @@ AssetPort supports texture atlas workflows where multiple static meshes share a 
 3. An unsuffixed base mesh takes priority if both it and `_LOD0` are present.
 4. Separate-file attachment currently targets Static Meshes; Skeletal Meshes stay on their existing import path.
 5. Set `"auto_import_lods": false` in `importer_config.json` to skip both embedded and separate-file LOD import.
+
+## 8. Smart Nanite Rules & Guardrails
+When `"smart_nanite": true` is enabled in `importer_config.json`:
+1. **Triangle Threshold:** Only Static Meshes with triangle counts strictly greater than `nanite_min_triangles` (default: `2500`) have Nanite enabled.
+2. **LOD Exclusion:** Meshes with custom LOD chains (`_LOD1`, etc.) or multiple LOD levels are skipped to preserve custom hand-crafted LOD budgets.
+3. **Material Blend Mode Guardrail:** Masked and Translucent meshes bypass Nanite to prevent overdraw and rasterization artifacts.
+4. **Subsystem Build:** Settings are committed via `StaticMeshEditorSubsystem.set_nanite_settings` with change application enabled.
