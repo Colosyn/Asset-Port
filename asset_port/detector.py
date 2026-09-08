@@ -74,8 +74,6 @@ CATEGORY_MAP ={
 
 }
 
-
-
 class AssetDetector:
     
     def __init__(self) -> None:
@@ -134,6 +132,9 @@ class AssetDetector:
         # Keep separately exported Mesh_LOD0.fbx, Mesh_LOD1.fbx, ... in the
         # same asset group without treating the marker as a material token.
         lod_index = None
+        is_loop = False
+        is_in_place = False
+        is_root_motion = False
         if path_obj.suffix.lower() == ".fbx":
             lod_match = re.search(r"_LOD(?P<index>\d+)$", stem, re.IGNORECASE)
             if lod_match:
@@ -142,6 +143,19 @@ class AssetDetector:
                     lod_index = parsed_index
                     stem = stem[:lod_match.start()]
                     # Any index > 7 will leave lod_index =None and prwserve the original stem
+            while True:
+                if m := re.search(r"_(rm|rootmotion)$", stem, re.IGNORECASE):
+                    is_root_motion = True
+                    stem = stem[:m.start()]
+                elif m := re.search(r"_(ip|inplace)$", stem , re.IGNORECASE):
+                    is_in_place = True
+                    stem = stem[:m.start()]
+                elif m := re.search(r"_(loop|lp)$", stem, re.IGNORECASE):
+                    is_loop = True
+                    stem = stem[:m.start()]
+                else:
+                    break
+            
         
         udim_tile = None
         udim_match = re.search(r"_(1[0-9]{3})$", stem)
@@ -167,6 +181,9 @@ class AssetDetector:
                 category=None,
                 material_slot_name=None,
                 lod_index=lod_index,
+                is_in_place=is_in_place,
+                is_root_motion=is_root_motion,
+                is_loop=is_loop 
             )
         
         group = match.groupdict()
@@ -233,6 +250,9 @@ class AssetDetector:
             kit_name=kit_name,
             ue_asset_name=ue_asset_name,
             lod_index=lod_index,
+            is_in_place=is_in_place,
+            is_root_motion=is_root_motion,
+            is_loop=is_loop 
         )
         
 
