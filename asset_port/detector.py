@@ -74,6 +74,8 @@ CATEGORY_MAP ={
 
 }
 
+
+
 class AssetDetector:
     
     def __init__(self) -> None:
@@ -94,6 +96,14 @@ class AssetDetector:
         
         self.regax = re.compile(pattern, re.IGNORECASE)
         
+    def _sanitize_name(self, name: str ) -> str:
+        
+        #Sanitizes spaces, parentheses, and duplicate delimiters using regex.
+        name = re.sub(r"\s*\(\s*(\d+)\s*\)", lambda m: f"_{int(m.group(1)):02d}", name)
+        name = re.sub(r"\s+", "_", name)
+        name = re.sub(r"_{2,}", "_", name)
+        
+        return name.strip("_")
     
     def detect_file(self, file_path ) -> DetectedAsset :
         
@@ -117,6 +127,8 @@ class AssetDetector:
         if udim_match:
             udim_tile = udim_match.group(1)
             stem = stem[:udim_match.start()]
+        
+        stem = self._sanitize_name(stem)
         
         match = self.regax.match(stem)
         inferred_type = self._infer_type(path_obj.suffix)
@@ -160,6 +172,10 @@ class AssetDetector:
         if material_raw and not suffix_raw:
             if material_raw.lower() in SUFFIX_MAP:
                 suffix_raw = material_raw
+                material_raw = None
+            else:
+                # no suffix exists: treat material slot as part of the base name
+                parsed_name = f"{parsed_name}_{material_raw}"
                 material_raw = None
 
         # Marketplace filenames commonly include resolution metadata before the
