@@ -1,13 +1,11 @@
 import unreal
 
-def get_minor_version():
-    v = unreal.SystemLibrary.get_engine_version()
-    return int(v.split(".")[1])
-    
 def register_asset_port():
     menus = unreal.ToolMenus.get()
-    minor = get_minor_version()
+    
+    
     toolbar = menus.extend_menu("ContentBrowser.ToolBar")
+    
     if toolbar:
         entry = unreal.ToolMenuEntry(
             name="AssetPortImportButton",
@@ -20,14 +18,10 @@ def register_asset_port():
             "AssetPort",
             "import asset_port.gui_helper; asset_port.gui_helper.run_importer()"
         )
-        if minor > 3:
-            entry.insert_position = unreal.ToolMenuInsert("OpenFabWindow", unreal.ToolMenuInsertType.AFTER)
-            
-        else:
-            entry.insert_position= unreal.ToolMenuInsert("SaveButton", unreal.ToolMenuInsertType.AFTER )
-            
+          
         toolbar.add_menu_entry("Save", entry)
     context_menu = menus.extend_menu("ContentBrowser.AddNewContextMenu")
+    
     if context_menu:
         entry = unreal.ToolMenuEntry(
             name="AssetPortContextMenu",
@@ -40,10 +34,7 @@ def register_asset_port():
             "AssetPort",
             "import asset_port.gui_helper; asset_port.gui_helper.run_importer()"
         )
-        try:
-            entry.insert_position = unreal.ToolMenuInsert("OpenFabWindow", unreal.ToolMenuInsertType.AFTER)
-        except Exception:
-            pass
+    
         context_menu.add_menu_entry("ContentBrowserGetContent", entry)
 
     menus.refresh_all_widgets()

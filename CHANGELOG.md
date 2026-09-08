@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.1] - 2026-09-08
+
+### Fixed
+- **Content Browser Toolbar Decoupling**: Decoupled the `AssetPort` toolbar button from the `OpenFabWindow` anchor, permanently locking it to the native engine `"Save"` section. Eliminates missing button regressions and `LogToolMenus` warnings across UE 5.3, 5.4, 5.5, and 5.6+ regardless of whether the Fab plugin is enabled, disabled, or uninstalled.
+
 ## [1.6.0] - 2026-08-28
 
 ### Added
