@@ -105,6 +105,27 @@ class AssetDetector:
         
         return name.strip("_")
     
+    def _inspect_fbx_type(self, file_path: Path) -> AssetType:
+        # inspect the starting of FBX file to determine it's AssetType
+        try:
+            with open(file_path, "rb") as f:
+                header = f.read(512 * 1024)
+    
+            has_geom = b"Geometry" in header and b"Mesh" in header
+            has_skin = b"Deformer" in header or b"SubDeformer" in header
+            has_anim = b"AnimationStack" in header or b"AnimationCurve" in header or b"AnimCurve" in header
+        
+            if has_geom and has_skin:
+                return AssetType.SKELETAL_MESH
+            elif not has_geom and has_anim:
+                return AssetType.ANIMATION
+            elif has_geom and not has_skin:
+                return AssetType.STATIC_MESH
+            return AssetType.STATIC_MESH
+        except Exception:
+            return AssetType.STATIC_MESH
+            
+    
     def detect_file(self, file_path ) -> DetectedAsset :
         
         path_obj = Path(file_path)
@@ -131,7 +152,7 @@ class AssetDetector:
         stem = self._sanitize_name(stem)
         
         match = self.regax.match(stem)
-        inferred_type = self._infer_type(path_obj.suffix)
+        inferred_type = self._infer_type(path_obj.suffix, path_obj)
         
         if not match:
             return DetectedAsset(
@@ -217,13 +238,14 @@ class AssetDetector:
 
         return detected_asset
 
-    @staticmethod
-    def _infer_type(extension):
+    
+    def _infer_type(self, extension, path_obj):
         extension = extension.lower()
         if extension in (".png", ".tga", ".jpg", ".exr"):
             return AssetType.TEXTURE
         if extension == ".fbx":
-            return AssetType.STATIC_MESH
+            return self._inspect_fbx_type(path_obj)
+            
         return AssetType.UNKNOWN
         
         
