@@ -67,6 +67,34 @@ def texture_settings(texture_asset, slot: TextureSlot):
     if slot == TextureSlot.TRANSLUCENCY:
         texture_asset.srgb = True
         texture_asset.compression_settings =unreal.TextureCompressionSettings.TC_DEFAULT
+        
+        
+def get_animation_setting(skeleton = None):
+    # configures animation only files
+    
+    fbx = unreal.FbxImportUI()
+        
+    fbx.import_materials = False
+    fbx.import_textures = False
+    fbx.import_mesh = False
+    fbx.import_animations = True
+    
+    fbx.mesh_type_to_import = unreal.FBXImportType.FBXIT_ANIMATION
+    fbx.automated_import_should_detect_type = False
+    if skeleton is not None:
+        fbx.skeleton = skeleton
+        
+    anim_data = fbx.anim_sequence_import_data
+    if anim_data:
+        anim_data.animation_length = unreal.FBXAnimationLengthImportType.FBXALIT_EXPORTED_TIME
+        anim_data.import_bone_tracks = True
+        anim_data.snap_to_closest_frame_boundary = True
+        
+    return fbx
+     
+    
+    
+    
 
 def evaluate_smart_nanite(mesh_obj, group, config, blend_mode = "Opaque") -> bool:
     
