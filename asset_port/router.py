@@ -2,10 +2,17 @@ from pathlib import Path
 from asset_port.detector import AssetDetector 
 from asset_port.models import DetectedAsset, AssetType, AtlasGroup
 from typing import Optional
+
+DEFAULT_PREFIX_MAP = {
+    AssetType.STATIC_MESH: "SM_",
+    AssetType.SKELETAL_MESH: "SK_",
+    AssetType.TEXTURE: "T_",
+    AssetType.ANIMATION: "A_",
+}
+
 class AssetRouter():
-    
-   
-    def get_folder_path(self, asset: DetectedAsset, category_override: Optional[str] = None):
+      
+    def get_folder_path(self, asset: DetectedAsset, category_override: Optional[str] = None, character_name: Optional[str] = None,  is_retargeted: bool = False):
         
         if category_override:
             category = category_override
@@ -39,21 +46,39 @@ class AssetRouter():
             else:
                 category = "_Unsorted"
         
-        if asset.prefix == "":
-            prefix = asset.prefix
-        
+        if asset.prefix:
+            prefix = f"{asset.prefix.upper()}_"
         else:
-            prefix = f"{asset.prefix.upper()}_" 
+            prefix = DEFAULT_PREFIX_MAP.get(asset.asset_type, "") 
                   
         if asset.suffix == "":
             suffix = asset.suffix
-            
         else:
             suffix =f"_{asset.suffix}"      
             
         if asset.asset_type == AssetType.TEXTURE and asset.material_slot_name:
             folder_path = f"/Game/{category}/{asset.base_name}/Textures"
             asset_name = f"{prefix}{asset.base_name}_{asset.material_slot_name}{suffix}"
+            
+        elif asset.asset_type == AssetType.ANIMATION:
+            pack_name = Path(asset.source_path).parent.name if asset.source_path else ""
+            if pack_name == ".":
+                pack_name = ""
+            if is_retargeted and character_name:
+                if pack_name and pack_name.lower() != character_name.lower():
+                    folder_path = f"/Game/Characters/{character_name}/Animations/{pack_name}"
+                else:
+                    folder_path = f"/Game/Characters/{character_name}/Animations"
+            elif character_name:
+                folder_path = f"/Game/Characters/{character_name}/Animations"
+            else:
+                folder_path = f"/Game/Animations/{pack_name}" if pack_name else "/Game/Animations"
+                
+            asset_name = f"{prefix}{asset.base_name}{suffix}"
+           
+            
+            asset_name = f"{prefix}{asset.base_name}{suffix}"
+          
         else:    
             folder_path = f"/Game/{category}/{asset.base_name}"
             asset_name = f"{prefix}{asset.base_name}{suffix}"
