@@ -42,4 +42,18 @@ class AnimationDetectionTests(unittest.TestCase):
         self.assertIsNone(groups[0].mesh)
         self.assertEqual(len(groups[0].animation_list), 2)
         self.assertEqual(groups[0].category, "Animations")
+    def test_longest_prefix_character_match(self):
+        hero = self.detector.detect_file("SK_char_Hero.fbx")
+        boss = self.detector.detect_file("SK_char_Hero_Boss.fbx")
+        anim = self.detector.detect_file("A_Hero_Boss_Attack.fbx")
+        groups = self.detector.group_assets([hero, boss, anim])
+        boss_group = next(g for g in groups if g.base_name == "Hero_Boss")
+        hero_group = next(g for g in groups if g.base_name == "Hero")
+        self.assertEqual(len(boss_group.animation_list), 1)
+        self.assertEqual(len(hero_group.animation_list), 0)
+    def test_animation_pack_does_not_collide_with_static_mesh(self):
+        prop = self.detector.detect_file("SM_prop_Capoeira.fbx")
+        anim = self.detector.detect_file("Capoeira/A_ginga.fbx")
+        groups = self.detector.group_assets([prop, anim])
+        self.assertEqual(len(groups), 2)
         

@@ -307,11 +307,13 @@ class AssetDetector:
                   
             if asset.category:
                 group.category = asset.category
-                 
-        for anim in anims:
-            matching_char = next((g for g in groups.values() if g.mesh and g.mesh.asset_type == AssetType.SKELETAL_MESH 
-                                  and (anim.base_name == g.base_name or anim.base_name.startswith(f"{g.base_name}_"))),None)
+          
+        chat_candidates = [g for g in groups.values() if g.mesh and g.mesh.asset_type == AssetType.SKELETAL_MESH]
+        chat_candidates.sort(key=lambda g: len(g.base_name), reverse=True)  
+             
+        for anim in anims: 
             
+            matching_char = next((g for g in chat_candidates if anim.base_name == g.base_name or anim.base_name.startswith(f"{g.base_name}_")),None)
             if matching_char:
                 matching_char.animation_list.append(anim)
             else:
@@ -322,9 +324,10 @@ class AssetDetector:
                     pack_name = anim.base_name.split("_")[0]
                 else:
                     pack_name = anim.base_name
-                if pack_name not in groups:
-                    groups[pack_name] = AssetGroup(base_name=pack_name, category="Animations")
-                groups[pack_name].animation_list.append(anim)
+                pack_key = pack_name if (pack_name not in groups or groups[pack_name].mesh is None) else f"Anim_{pack_name}"
+                if pack_key not in groups:
+                    groups[pack_key] = AssetGroup(base_name=pack_name, category="Animations")
+                groups[pack_key].animation_list.append(anim)
                 
         for group in groups.values():
             if group.category:
