@@ -2,7 +2,7 @@ import unreal
 from pathlib import Path
 from asset_port.detector import AssetDetector
 from asset_port.router import AssetRouter
-from asset_port.presets import get_mesh_setting, texture_settings, evaluate_smart_nanite, apply_nanite_settings
+from asset_port.presets import get_mesh_setting,get_animation_setting, texture_settings, evaluate_smart_nanite, apply_nanite_settings
 from asset_port.models import AssetType, PipelineReport, TextureSlot, AtlasGroup
 from asset_port.Validator import asset_validator, group_validator, atlas_group_validator
 from asset_port.config import config_loader
@@ -226,12 +226,17 @@ class AssetImporter():
                 report.warnings.extend(atlas_warnings)
                     
         for group in group_asset:
-            assets_in_group = group.texture_list.copy()
+            
+            character_name = group.mesh.base_name if (group.mesh and group.mesh.asset_type == AssetType.SKELETAL_MESH) else None
+            
+            assets_in_group = []
             if group.mesh:
                 assets_in_group.append(group.mesh)
+            assets_in_group.extend(group.texture_list)
+            assets_in_group.extend(group.animation_list)
                 
             for asset in assets_in_group: 
-                folder, asset_path = self.router.get_folder_path(asset, category)
+                folder, asset_path = self.router.get_folder_path(asset, category, character_name=character_name)
                 asset.ue_path = asset_path
                 if asset.is_udim and not asset.is_udim_primary:
                     continue
@@ -246,7 +251,9 @@ class AssetImporter():
                     task.automated = True
                     task.save = True
                     
-                    if asset.extension.lower() == ".fbx" or asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
+                    if asset.asset_type == AssetType.ANIMATION:
+                        task.options = get_animation_setting(skeleton=None)
+                    elif asset.extension.lower() == ".fbx" or asset.asset_type in (AssetType.STATIC_MESH, AssetType.SKELETAL_MESH):
                         task.options = get_mesh_setting(asset, self.config.auto_import_lods)
                 
                     task_pairs.append((asset, task)) 
