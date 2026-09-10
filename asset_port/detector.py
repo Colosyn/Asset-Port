@@ -273,46 +273,59 @@ class AssetDetector:
         
         groups = {}
         
-        for asset in assets:
-            if asset.asset_type not in (
-                AssetType.TEXTURE,
-                AssetType.STATIC_MESH,
-                AssetType.SKELETAL_MESH,
-            ):
-                continue
+        non_anims = [a for a in assets if a.asset_type in (AssetType.TEXTURE, AssetType.STATIC_MESH, AssetType.SKELETAL_MESH )]
+        
+        anims = [a for a in assets if a.asset_type == AssetType.ANIMATION]
+        
+        for asset in non_anims:
             if asset.base_name not in groups:
                 groups[asset.base_name] = AssetGroup(
                     base_name= asset.base_name,
-                ) 
-            
+                )
             group = groups[asset.base_name]
             if asset.asset_type == AssetType.TEXTURE:
                 if asset.is_udim and not asset.is_udim_primary:
                     primary = next((t for t in group.texture_list 
-                                    if t.suffix == asset.suffix and
-                                    t.material_slot_name == asset.material_slot_name), None)
+                        if t.suffix == asset.suffix and
+                        t.material_slot_name == asset.material_slot_name), None)
                     if primary:
                         primary.tile_count += 1
                     continue
                 group.texture_list.append(asset)
-                
                 if asset.material_slot_name:
                     if asset.material_slot_name not in group.material_slots:
                         group.material_slots[asset.material_slot_name] = []
                     group.material_slots[asset.material_slot_name].append(asset)
-                
+                            
             elif asset.asset_type in (AssetType.SKELETAL_MESH, AssetType.STATIC_MESH):
                 if asset.lod_index in (None, 0):
-                    # Prefer an unsuffixed base mesh if both it and LOD0 exist.
+                # Prefer an unsuffixed base mesh if both it and LOD0 exist.
                     if group.mesh is None or group.mesh.lod_index == 0:
                         group.mesh = asset
                 else:
                     group.lod_meshes.append(asset)
-                
-            
+                  
             if asset.category:
                 group.category = asset.category
-        
+                 
+        for anim in anims:
+            matching_char = next((g for g in groups.values() if g.mesh and g.mesh.asset_type == AssetType.SKELETAL_MESH 
+                                  and (anim.base_name == g.base_name or anim.base_name.startswith(f"{g.base_name}_"))),None)
+            
+            if matching_char:
+                matching_char.animation_list.append(anim)
+            else:
+                parent = Path(anim.source_path).parent.name if anim.source_path else ""
+                if parent and parent not in (".","temp","Downloads","Desktop"):
+                    pack_name = parent
+                elif "_" in anim.base_name:
+                    pack_name = anim.base_name.split("_")[0]
+                else:
+                    pack_name = anim.base_name
+                if pack_name not in groups:
+                    groups[pack_name] = AssetGroup(base_name=pack_name, category="Animations")
+                groups[pack_name].animation_list.append(anim)
+                
         for group in groups.values():
             if group.category:
                 if group.mesh:
@@ -321,6 +334,8 @@ class AssetDetector:
                     tex.category = group.category
                 for lod in group.lod_meshes:
                     lod.category = group.category
+                for anim in group.animation_list:
+                    anim.category = group.category
         
         return list(groups.values())
             
