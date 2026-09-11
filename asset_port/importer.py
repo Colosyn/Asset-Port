@@ -327,6 +327,8 @@ class AssetImporter():
         if dry_run:
             report.asset_import = len(detect_group)
             report.lods_imported = len(lod_pairs) if self.config.auto_import_lods else 0
+            report.animations_imported = sum(len(g.animation_list) for g in group_asset)
+
             if self.config.auto_create_mi:
                 report.mis_created = len(group_asset) + len(atlas_groups)
                 report.mis_linked = sum(1 for g in group_asset if g.mesh is not None)
@@ -367,7 +369,15 @@ class AssetImporter():
                         if asset.texture_slot == TextureSlot.BASE_COLOUR:
                             asset.has_alpha = check_source_has_alpha(asset.source_path)
                             unreal.log(f"AssetPort: BaseColour {asset.base_name} has_alpha -> {asset.has_alpha}")
-                    
+                
+                if asset.asset_type == AssetType.ANIMATION:
+                    report.animations_imported +=1
+                    if asset.is_root_motion:
+                        for obj in (task.get_objects() or []):
+                            if isinstance(obj, unreal.AnimSequence):
+                                obj.set_editor_property("enable_root_motion", True)
+                                unreal.EditorAssetLibrary.save_loaded_asset(obj)
+                                unreal.log(f"AssetPort: Enable root motion for {asset.base_name}")
         successful_imports = 0
         for asset, task in task_pairs:
             if len(task.get_objects()) >0:
