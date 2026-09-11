@@ -147,7 +147,7 @@ class AssetImporter():
         report.lods_imported += 1
         return True
         
-    def import_directory(self, source_dir, category, dry_run = False):
+    def import_directory(self, source_dir, category, dry_run = False, target_skeleton = None):
         report = PipelineReport()
         file_path = Path(source_dir)
         task_pairs = []
@@ -233,7 +233,7 @@ class AssetImporter():
             if group.mesh:
                 assets_in_group.append(group.mesh)
             assets_in_group.extend(group.texture_list)
-            assets_in_group.extend(group.animation_list)
+           
                 
             for asset in assets_in_group: 
                 folder, asset_path = self.router.get_folder_path(asset, category, character_name=character_name)
@@ -258,7 +258,7 @@ class AssetImporter():
                 
                     task_pairs.append((asset, task)) 
             
-            ref_asset = group.mesh or (group.texture_list[0] if group.texture_list else None)
+            ref_asset = group.mesh or (group.texture_list[0] if group.texture_list else (group.animation_list[0] if group.animation_list else None))
             if ref_asset and ref_asset.ue_path:
                 folder_parts = ref_asset.ue_path.split("/")[:-1]
                 if folder_parts and folder_parts[-1] == "Textures":
@@ -273,12 +273,16 @@ class AssetImporter():
                 group_warnings = group_validator(group)
                 if group_warnings:
                     report.warnings.extend(group_warnings)
-        
+                    
+        character_skeletons = {}
         if not dry_run:   
             unreal_tasks = [t for a, t in task_pairs]   
-            imported_objects = unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(unreal_tasks)
-                            
+            unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(unreal_tasks)               
             for asset, task in task_pairs:
+                if asset.asset_type == AssetType.SKELETAL_MESH:
+                    for obj in task.get_objects():
+                        if isinstance(obj, unreal.SkeletalMesh):
+                            character_skeletons[asset.base_name] = obj.get_editor_property("skeleton")
                 imported_objs = task.get_objects()
                 if not imported_objs:
                     continue
@@ -286,7 +290,36 @@ class AssetImporter():
                     current_path = obj.get_package().get_name()
                     if current_path != asset.ue_path:
                         unreal.EditorAssetLibrary.rename_asset(current_path, asset.ue_path)
+         
+        anim_task_pairs = []
+        for group in group_asset:
+            if not group.animation_list:
+                continue
+            character_name = group.mesh.base_name if (group.mesh and group.mesh.asset_type == AssetType.SKELETAL_MESH)  else None
+            group_skeleton = character_skeletons.get(group.base_name, target_skeleton)
             
+            for anim in group.animation_list:
+                folder, asset_path = self.router.get_folder_path(anim, category, character_name=character_name)
+                anim.ue_path = asset_path
+                if not dry_run:
+                    task = unreal.AssetImportTask()
+                    task.filename = anim.source_path
+                    task.destination_path =folder
+                    task.destination_name = anim.ue_path.split("/")[-1]
+                    task.automated =  True
+                    task.save = True
+                    task.options = get_animation_setting(skeleton=group_skeleton)
+                    anim_task_pairs.append((anim, task))
+        
+        if not dry_run and anim_task_pairs:
+            unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([t for a,t in anim_task_pairs])
+            for asset , task in anim_task_pairs:
+                for obj in (task.get_objects() or []):
+                    current_path = obj.get_package().get_name()
+                    if current_path != asset.ue_path:
+                        unreal.EditorAssetLibrary.rename_asset(current_path, asset.ue_path)
+                        
+        task_pairs = task_pairs + anim_task_pairs
         
         report.groups_found = len(group_asset) + len(atlas_groups)
         report.atlas_group_found = len(atlas_groups)
