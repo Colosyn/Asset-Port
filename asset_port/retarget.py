@@ -66,3 +66,26 @@ def auto_characterize_ik_rig(ik_rig: unreal.IKRigDefinition, skeletal_mesh: unre
         
     unreal.EditorAssetLibrary.save_loaded_asset(ik_rig)
     return True
+
+def setup_retargeter(retargeter: unreal.IKRetargeter, source_ik_rig: unreal.IKRigDefinition, target_ik_rig: unreal.IKRigDefinition, source_mesh: unreal.SkeletalMesh, target_mesh: unreal.SkeletalMesh,) -> bool:
+    
+    rtg_controller = unreal.IKRetargeterController.get_controller(retargeter)
+    if not rtg_controller:
+        unreal.log_error(f"AssetPort: COuld not get IkRetargerController for {retargeter.get_name()}")
+        return False
+    
+    rtg_controller.set_ik_rig(unreal.RetargetSourceOrTarget.SOURCE, source_ik_rig)
+    rtg_controller.set_ik_rig(unreal.RetargetSourceOrTarget.TARGET, target_ik_rig)
+    rtg_controller.set_preview_mesh(unreal.RetargetSourceOrTarget.SOURCE, source_mesh)
+    rtg_controller.set_preview_mesh(unreal.RetargetSourceOrTarget.TARGET, target_mesh)
+    
+    rtg_controller.auto_map_chains(unreal.AutoMapChainType.FUZZY, True)
+    
+    if hasattr(rtg_controller, "add_default_ops"):
+        rtg_controller.add_default_ops()
+        
+    if hasattr(rtg_controller, "auto_align_all_bones"):
+        rtg_controller.auto_align_all_bones(unreal.RetargetSourceOrTarget.TARGET , unreal.RetargetAutoAlignMethod.CHAIN_TO_CHAIN)
+        
+    unreal.EditorAssetLibrary.save_loaded_asset(retargeter)
+    return True
