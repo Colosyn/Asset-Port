@@ -38,3 +38,31 @@ def get_or_create_retargeter(source_mesh: unreal.SkeletalMesh, target_mesh: unre
     tools = unreal.AssetToolsHelpers.get_asset_tools()
     factory = unreal.IKRetargetFactory()   
     return tools.create_asset(asset_name, target_folder, unreal.IKRetargeter, factory)
+
+def auto_characterize_ik_rig(ik_rig: unreal.IKRigDefinition, skeletal_mesh: unreal.SkeletalMesh) -> bool:
+    
+    ikr_controller = unreal.IKRigController.get_controller(ik_rig)
+    if not ikr_controller:
+        unreal.log_error(f"AssetPort: Could not get IKRigCOntroller for {ik_rig.get_name()}")
+        return False
+        
+    if len(ikr_controller.get_retarget_chains()) >= 4:
+        return True
+    
+    ikr_controller.set_skeletal_mesh(skeletal_mesh)
+    if not ikr_controller.apply_auto_generated_retarget_definition():
+        unreal.log_warning(f"AssetPort: Auto-characterization failed for {skeletal_mesh.get_name()} - unknown rig template.")
+        return False
+    
+    chains = ikr_controller.get_retarget_chains()
+    if not chains or len(chains) < 4:
+        unreal.log_warning(f"AssetPort: Insufficient retarget chains ({len(chains) if chains else 0}/4 minimum) for {skeletal_mesh.get_name()}.")
+        return False
+    
+    try:
+        ikr_controller.apply_auto_fbik()
+    except Exception as e:
+        unreal.log_warning(f"AssetPort: Auto-FBIK skipped for {skeletal_mesh.get_name()}: {e}")
+        
+    unreal.EditorAssetLibrary.save_loaded_asset(ik_rig)
+    return True
