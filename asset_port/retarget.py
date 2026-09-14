@@ -89,3 +89,37 @@ def setup_retargeter(retargeter: unreal.IKRetargeter, source_ik_rig: unreal.IKRi
         
     unreal.EditorAssetLibrary.save_loaded_asset(retargeter)
     return True
+
+def batch_retarget_animation(retargeter: unreal.IKRetargeter, source_mesh: unreal.SkeletalMesh, target_mesh: unreal.SkeletalMesh, anim_assets: list, search: str ="", replace: str ="", prefix: str ="", suffix: str ="",) -> list:
+    
+    if not anim_assets:
+        return []
+    
+    asset_data_list = [ a if isinstance(a, unreal.AssetData) else unreal.AssetRegistryHelpers.create_asset_data(a) for a in anim_assets]
+    
+    if hasattr(unreal.IKRetargetBatchOperation, "run_batch_retarget"):
+        inputs = unreal.IKRetargetBatchOperationInputs()
+        inputs.assets_to_retarget = asset_data_list
+        inputs.source_mesh = source_mesh
+        inputs.target_mesh = target_mesh
+        inputs.ik_retarget_asset = retargeter
+        inputs.search = search
+        inputs.replace = replace
+        inputs.prefix = prefix
+        inputs.suffix = suffix
+        inputs.include_referenced_assets = True
+        return list(unreal.IKRetargetBatchOperation.run_batch_retarget(inputs))
+    
+    try:
+        return list(unreal.IKRetargetBatchOperation.duplicate_and_retarget(asset_data_list, source_mesh, target_mesh, retargeter, search,replace,prefix,suffix, True,True))
+    except TypeError:
+        pass
+    
+    try:
+        return list(unreal.IKRetargetBatchOperation.duplicate_and_retarget(asset_data_list, source_mesh, target_mesh, retargeter, search,replace,prefix,suffix, True))
+    except TypeError:
+        pass
+    
+    unreal.log_error(f"AssetPort: Unsupported engine version for batch retargeting.")
+    return []
+        
