@@ -12,9 +12,14 @@ last_category = None
 transparency_widget = None  
 confirm_callback = None
 cancel_callback = None     
+skeleton_widget = None
 TAB_ID = unreal.Name("/Game/Python/Widgets/EUW_AssetPort.EUW_AssetPort_ActiveTab")
 PREIVEW_ID = unreal.Name("/Game/Python/Widgets/EUW_AssetPort_Preview.EUW_AssetPort_Preview_ActiveTab")
 TRANSPARENCY_ID = unreal.Name("/Game/Python/Widgets/EUW_TransparencySetup.EUW_TransparencySetup_ActiveTab")
+SKELETON_ID = unreal.Name("/Game/Python/Widgets/EUW_SkeletonSetup.EUW_SkeletonSetup_ActiveTab")
+
+def scan_for_standalone_packs(groups):
+    return [ g.base_name for g in groups if isinstance(g, AssetGroup) and g.mesh is None and getattr(g, "animation_list", None)]
 
 def scan_for_transparency(groups):
     items = []
@@ -71,6 +76,54 @@ def show_transparency_popup(items, on_confirm_callback):
         
         confirm_btn.on_clicked.add_callable(confirm_callback)
         cancel_btn.on_clicked.add_callable(cancel_callback)
+
+def show_skeleton_popup(pack_names, on_confirm_callback):
+    global skeleton_widget
+    subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
+    widget_asset = unreal.load_asset("/Game/Python/Widgets/EUW_SkeletonSetup")
+    
+    if not widget_asset:
+        on_confirm_callback({})
+        return
+    
+    skeleton_widget = subsystem.spawn_and_register_tab(widget_asset)
+    if skeleton_widget:
+        
+        skeleton_widget.set_editor_property("PackNames", pack_names)
+        skeleton_widget.call_method("PopulatePackList")
+        
+        confirm_btn = skeleton_widget.get_editor_property("Confirm_Button")
+        cancel_btn = skeleton_widget.get_editor_property("Cancel_Button")
+        
+        confirm_btn.on_clicked.add_callable(lambda: on_skeleton_confirm(pack_names, on_confirm_callback))
+        cancel_btn.on_clicked.add_callable(lambda: on_skeleton_cancel(on_confirm_callback))
+        
+def on_skeleton_confirm(pack_names, on_confirm_callback):
+    global skeleton_widget
+    decisions = {}
+    try:
+        if skeleton_widget:
+            scroll_box = skeleton_widget.get_editor_property("Pack_ScrollBox")
+            rows = [scroll_box.get_child_at(i) for i in range(scroll_box.get_children_count())]
+            for pack_name, row in zip(pack_names, rows):
+                try:
+                    picker = row.get_editor_property("Skeleton_Picker")
+                    if picker:
+                        decisions[pack_name] = picker
+                except Exception as e:
+                    unreal.log_error(f"AssetPort: Error reading skeleton for {pack_name}: {e}")
+    finally:
+        subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
+        subsystem.close_tab_by_id(SKELETON_ID)
+        skeleton_widget = None
+        on_confirm_callback(decisions)
+        
+def on_skeleton_cancel(on_confirm_callback):
+    global skeleton_widget
+    subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
+    subsystem.close_tab_by_id(SKELETON_ID)
+    skeleton_widget = None
+    on_confirm_callback({})      
         
 def on_popup_confirm(items, on_confirm_callback):
     global transparency_widget
@@ -118,19 +171,29 @@ def on_popup_cancel(on_confirm_callback):
 def execute_import_pipeline(folder_path, category, target_skeleton=None, auto_retarget=False, target_retarget_mesh=None):
     importer = AssetImporter()
     
-    groups , report = importer.import_directory(folder_path, category, dry_run=False, target_skeleton=target_skeleton, auto_retarget=auto_retarget, target_retarget_mesh=target_retarget_mesh,)
+    groups_preview , _ = importer.import_directory(folder_path, category, dry_run=True,)
+    standalone_packs = scan_for_standalone_packs(groups_preview)
     
-    items = scan_for_transparency(groups)
+    def start_live_import(skeleton_decisions):
+        final_skeletons = skeleton_decisions if skeleton_decisions else target_skeleton
+        groups, report = importer.import_directory(folder_path, category, dry_run=False,target_skeleton=final_skeletons,auto_retarget=auto_retarget, target_retarget_mesh=target_retarget_mesh,) 
+        
+        items = scan_for_transparency(groups)
     
-    def complete_build(decisions):
-        importer.build_materials(groups,decisions, report)
-        log_pipeline_report(report, folder_path)
+        def complete_build(decisions):
+            importer.build_materials(groups,decisions, report)
+            log_pipeline_report(report, folder_path)
         
-    if items:
-        show_transparency_popup(items, complete_build)
+        if items:
+            show_transparency_popup(items, complete_build)
         
+        else:
+            complete_build({})
+        
+    if standalone_packs and not target_skeleton:
+        show_skeleton_popup(standalone_packs, start_live_import)
     else:
-        complete_build({})
+        start_live_import({})
 
 def run_importer():
     global active_widget
@@ -151,6 +214,7 @@ def run_importer():
             import_button.on_clicked.add_callable(on_import_clicked)
             cancel_button.on_clicked.add_callable(on_cancel_clicked)
             preview_button.on_clicked.add_callable(on_preview_clicked)
+            
 def on_browse_clicked():
     if not active_widget:
         return
@@ -164,8 +228,7 @@ def on_browse_clicked():
     if folder_path:
         folder_path_field = active_widget.get_editor_property("Folder_Path_Field")
         folder_path_field.set_text(unreal.Text(folder_path))
-        
-        
+            
 def on_import_clicked():
     if not active_widget:
         return
@@ -197,8 +260,7 @@ def on_import_clicked():
         execute_import_pipeline(folder_path, category, auto_retarget=auto_retarget, target_retarget_mesh=target_retarget_mesh)
         
         on_cancel_clicked()
-    
-    
+       
 def on_cancel_clicked():
     global active_widget
     if active_widget:
@@ -206,8 +268,7 @@ def on_cancel_clicked():
         subsystem.close_tab_by_id(TAB_ID)
         active_widget = None
     active_widget = None
-    
-    
+     
 def on_preview_clicked():
     
     global active_widget,  preview_widget, last_folder_path, last_category
@@ -307,8 +368,7 @@ def on_preview_clicked():
         preview_widget.call_method("RefreshPreviewUI")
         
         on_cancel_clicked()
-        
-        
+               
 def  on_preview_import_clicked():
     global last_folder_path, last_category
     
@@ -317,7 +377,6 @@ def  on_preview_import_clicked():
         
     on_preview_cancel_clicked()
     
-
 def on_preview_cancel_clicked():
     global preview_widget
     if preview_widget:

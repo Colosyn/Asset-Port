@@ -300,7 +300,10 @@ class AssetImporter():
             if not group.animation_list:
                 continue
             character_name = group.mesh.base_name if (group.mesh and group.mesh.asset_type == AssetType.SKELETAL_MESH)  else None
-            group_skeleton = character_skeletons.get(group.base_name, target_skeleton)
+            if isinstance(target_skeleton, dict):
+                group_skeleton = character_skeletons.get(group.base_name, target_skeleton.get(group.base_name))
+            else:
+                group_skeleton = character_skeletons.get(group.base_name, target_skeleton)
             
             for anim in group.animation_list:
                 folder, asset_path = self.router.get_folder_path(anim, category, character_name=character_name)
