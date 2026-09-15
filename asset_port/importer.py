@@ -1,5 +1,6 @@
 import unreal
 from pathlib import Path
+from typing import Optional
 from asset_port.detector import AssetDetector
 from asset_port.router import AssetRouter
 from asset_port.presets import get_mesh_setting,get_animation_setting, texture_settings, evaluate_smart_nanite, apply_nanite_settings
@@ -7,6 +8,7 @@ from asset_port.models import AssetType, PipelineReport, TextureSlot, AtlasGroup
 from asset_port.Validator import asset_validator, group_validator, atlas_group_validator
 from asset_port.config import config_loader
 from asset_port.materials import create_material_instance,create_atlas_material_instance
+from asset_port.retarget import _clean_character_name,get_or_create_ik_rig,get_or_create_retargeter, auto_characterize_ik_rig,setup_retargeter, batch_retarget_animation
 
 def check_source_has_alpha(file_path):
     if not file_path:
@@ -147,7 +149,7 @@ class AssetImporter():
         report.lods_imported += 1
         return True
         
-    def import_directory(self, source_dir, category, dry_run = False, target_skeleton = None):
+    def import_directory(self, source_dir, category, dry_run = False, target_skeleton: Optional[unreal.Skeleton] =None, auto_retarget: bool = False, target_retarget_mesh: Optional[unreal.SkeletalMesh] = None):
         report = PipelineReport()
         file_path = Path(source_dir)
         task_pairs = []
@@ -275,6 +277,7 @@ class AssetImporter():
                     report.warnings.extend(group_warnings)
                     
         character_skeletons = {}
+        character_meshs = {}
         if not dry_run:   
             unreal_tasks = [t for a, t in task_pairs]   
             unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(unreal_tasks)               
@@ -283,6 +286,7 @@ class AssetImporter():
                     for obj in task.get_objects():
                         if isinstance(obj, unreal.SkeletalMesh):
                             character_skeletons[asset.base_name] = obj.get_editor_property("skeleton")
+                            character_meshs[asset.base_name] = obj
                 imported_objs = task.get_objects()
                 if not imported_objs:
                     continue
@@ -328,7 +332,8 @@ class AssetImporter():
             report.asset_import = len(detect_group)
             report.lods_imported = len(lod_pairs) if self.config.auto_import_lods else 0
             report.animations_imported = sum(len(g.animation_list) for g in group_asset)
-
+            if auto_retarget and target_retarget_mesh:
+                report.animations_retargeted = report.animations_imported
             if self.config.auto_create_mi:
                 report.mis_created = len(group_asset) + len(atlas_groups)
                 report.mis_linked = sum(1 for g in group_asset if g.mesh is not None)
@@ -378,6 +383,39 @@ class AssetImporter():
                                 obj.set_editor_property("enable_root_motion", True)
                                 unreal.EditorAssetLibrary.save_loaded_asset(obj)
                                 unreal.log(f"AssetPort: Enable root motion for {asset.base_name}")
+                                
+            if not dry_run and auto_retarget and target_retarget_mesh:
+                target_ik_rig = get_or_create_ik_rig(target_retarget_mesh)
+                if not auto_characterize_ik_rig(target_ik_rig, target_retarget_mesh):
+                    report.warnings.append(f"AssetPort: Auto-retarget aborted, could not characterize target {target_retarget_mesh.get_name()}")
+                else:
+                    for group in group_asset:
+                        if not group.animation_list:
+                            continue
+                        
+                        source_mesh = character_meshs.get(group.base_name)
+                        if not  source_mesh or source_mesh == target_retarget_mesh:
+                            continue
+                        
+                        source_ik_rig = get_or_create_ik_rig(source_mesh)
+                        if not auto_characterize_ik_rig(source_ik_rig, source_mesh):
+                            report.warnings.append(f"AssetPort: Auto-retarget skipped for {group.base_name} -characterization failed.")
+                            continue
+                        
+                        retargeter = get_or_create_retargeter(source_mesh, target_retarget_mesh)
+                        if not setup_retargeter(retargeter, source_ik_rig, target_ik_rig, source_mesh, target_retarget_mesh):
+                            report.warnings.append(f"AssetPort: Auto-retarget skipped for {group.base_name} — retargeter setup failed.")
+                            continue
+                        group_anim_objects = []
+                        for anim_asset, task in anim_task_pairs:
+                            if anim_asset in group.animation_list:
+                                for obj in (task.get_objects() or []):
+                                    if isinstance(obj, unreal.AnimSequence):
+                                        group_anim_objects.append(obj)
+                                        
+                        if group_anim_objects:
+                            retargeted = batch_retarget_animation(retargeter,source_mesh, target_retarget_mesh, group_anim_objects) 
+                            report.animations_retargeted += len(retargeted)
         successful_imports = 0
         for asset, task in task_pairs:
             if len(task.get_objects()) >0:
