@@ -114,12 +114,11 @@ def on_popup_cancel(on_confirm_callback):
     subsystem.close_tab_by_id(TRANSPARENCY_ID)
     transparency_widget = None
     on_confirm_callback({})
-            
-              
-def execute_import_pipeline(folder_path, category):
+                          
+def execute_import_pipeline(folder_path, category, target_skeleton=None, auto_retarget=False, target_retarget_mesh=None):
     importer = AssetImporter()
     
-    groups , report = importer.import_directory(folder_path, category, dry_run=False)
+    groups , report = importer.import_directory(folder_path, category, dry_run=False, target_skeleton=target_skeleton, auto_retarget=auto_retarget, target_retarget_mesh=target_retarget_mesh,)
     
     items = scan_for_transparency(groups)
     
@@ -170,6 +169,22 @@ def on_browse_clicked():
 def on_import_clicked():
     if not active_widget:
         return
+    
+    auto_retarget = False
+    target_retarget_mesh = False
+    try:
+        retarget_box = active_widget.get_editor_property("Checkbox_AutoRetarget")
+        if retarget_box:
+            auto_retarget = retarget_box.is_checked()
+    except Exception:
+        pass
+    
+    try:
+        mesh_picker = active_widget.get_editor_property("Target_Mesh_Picker")
+        if mesh_picker:
+            target_retarget_mesh = mesh_picker
+    except Exception:
+        pass
     folder_path_field = active_widget.get_editor_property("Folder_Path_Field")
     folder_path_text = folder_path_field.get_text()
     folder_path = unreal.TextLibrary.conv_text_to_string(folder_path_text)
@@ -177,9 +192,9 @@ def on_import_clicked():
     category_dropdown = active_widget.get_editor_property("Category_Dropdown")
     category_str = category_dropdown.get_selected_option()
     category = None if category_str in ("None", "Auto-Detect") else category_str
-    
+     
     if folder_path:
-        execute_import_pipeline(folder_path, category)
+        execute_import_pipeline(folder_path, category, auto_retarget=auto_retarget, target_retarget_mesh=target_retarget_mesh)
         
         on_cancel_clicked()
     
@@ -257,6 +272,9 @@ def on_preview_clicked():
                     import_asset_name.append(f"{display_folder}|Textures/{texture_name}")
                 else:
                     import_asset_name.append(f"{display_folder}|{texture_name}")
+            for anim in getattr(group, "animation_list", []):
+                anim_name = anim.ue_path.split("/")[-1]
+                import_asset_name.append(f"{display_folder}|Animations/{anim_name}")
         
             if config.auto_create_mi:
                 if isinstance(group, AssetGroup) and group.is_multi_material:
