@@ -85,7 +85,10 @@ def setup_retargeter(retargeter: unreal.IKRetargeter, source_ik_rig: unreal.IKRi
         rtg_controller.add_default_ops()
         
     if hasattr(rtg_controller, "auto_align_all_bones"):
-        rtg_controller.auto_align_all_bones(unreal.RetargetSourceOrTarget.TARGET , unreal.RetargetAutoAlignMethod.CHAIN_TO_CHAIN)
+        try:
+            rtg_controller.auto_align_all_bones(unreal.RetargetSourceOrTarget.TARGET)
+        except Exception:
+            pass
         
     unreal.EditorAssetLibrary.save_loaded_asset(retargeter)
     return True

@@ -370,8 +370,9 @@ class AssetImporter():
             for asset, task in task_pairs:
                 if slow_task.should_cancel():
                     break
-            
-                slow_task.enter_progress_frame(1, f"Configuring textures: {asset.base_name}")
+                
+                label = f"Configuring texture: {asset.base_name}" if asset.asset_type == AssetType.TEXTURE else f"Processing {asset.base_name}"
+                slow_task.enter_progress_frame(1, label)
                 if asset.asset_type == AssetType.TEXTURE:
                     imported_object = task.get_objects()
                     if not imported_object:
@@ -424,6 +425,19 @@ class AssetImporter():
                         if group_anim_objects:
                             retargeted = batch_retarget_animation(retargeter,source_mesh, target_retarget_mesh, group_anim_objects) 
                             report.animations_retargeted += len(retargeted)
+                            
+                            target_name = _clean_character_name(target_retarget_mesh)
+                            dest_folder = f"/Game/Characters/{target_name}/Animations/{group.base_name}"
+                            unreal.EditorAssetLibrary.make_directory(dest_folder)
+                            for asset_dat in retargeted:
+                                obj = asset_dat.get_asset()
+                                if obj:
+                                    unreal.EditorAssetLibrary.save_loaded_asset(obj)
+                                    dest_path = f"{dest_folder}/{asset_dat.asset_name}"
+                                    if unreal.EditorAssetLibrary.rename_asset(str(asset_dat.package_name), dest_path):
+                                        unreal.EditorAssetLibrary.save_asset(dest_path)
+                                
+                            
         successful_imports = 0
         for asset, task in task_pairs:
             if len(task.get_objects()) >0:

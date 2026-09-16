@@ -9,6 +9,8 @@ active_widget = None
 preview_widget = None
 last_folder_path = ""
 last_category = None
+last_auto_retarget = False
+last_target_mesh = None
 transparency_widget = None  
 confirm_callback = None
 cancel_callback = None     
@@ -281,7 +283,7 @@ def on_cancel_clicked():
      
 def on_preview_clicked():
     
-    global active_widget,  preview_widget, last_folder_path, last_category
+    global active_widget,  preview_widget, last_folder_path, last_category, last_target_mesh, last_auto_retarget
     config = config_loader()
     subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
     widget_blueprint = unreal.load_asset("/Game/Python/Widgets/EUW_AssetPort_Preview")
@@ -318,6 +320,8 @@ def on_preview_clicked():
     if folder_path:
         last_folder_path = folder_path
         last_category = category
+        last_auto_retarget = auto_retarget
+        last_target_mesh = target_mesh
         
         importer = AssetImporter()
         groups, report = importer.import_directory(folder_path, category, True, auto_retarget=auto_retarget, target_retarget_mesh=target_mesh)
@@ -391,10 +395,10 @@ def on_preview_clicked():
         on_cancel_clicked()
                
 def  on_preview_import_clicked():
-    global last_folder_path, last_category
+    global last_folder_path, last_category, last_target_mesh, last_auto_retarget
     
     if last_folder_path:
-        execute_import_pipeline(last_folder_path,last_category)
+        execute_import_pipeline(last_folder_path,last_category,auto_retarget=last_auto_retarget, target_retarget_mesh= last_target_mesh )
         
     on_preview_cancel_clicked()
     
