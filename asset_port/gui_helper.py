@@ -18,6 +18,14 @@ PREIVEW_ID = unreal.Name("/Game/Python/Widgets/EUW_AssetPort_Preview.EUW_AssetPo
 TRANSPARENCY_ID = unreal.Name("/Game/Python/Widgets/EUW_TransparencySetup.EUW_TransparencySetup_ActiveTab")
 SKELETON_ID = unreal.Name("/Game/Python/Widgets/EUW_SkeletonSetup.EUW_SkeletonSetup_ActiveTab")
 
+def _get_retarget_settings():
+    try:
+        box = active_widget.get_editor_property("Checkbox_AutoRetarget")
+        mesh =active_widget.get_editor_property("Target_Mesh_Picker")
+        return (box.is_checked() if box else False), mesh
+    except Exception:
+        return False, None
+    
 def scan_for_standalone_packs(groups):
     return [ g.base_name for g in groups if isinstance(g, AssetGroup) and g.mesh is None and getattr(g, "animation_list", None)]
 
@@ -233,31 +241,33 @@ def on_import_clicked():
     if not active_widget:
         return
     
-    auto_retarget = False
-    target_retarget_mesh = False
-    try:
-        retarget_box = active_widget.get_editor_property("Checkbox_AutoRetarget")
-        if retarget_box:
-            auto_retarget = retarget_box.is_checked()
-    except Exception:
-        pass
+    auto_retarget, target_mesh = _get_retarget_settings()
     
-    try:
-        mesh_picker = active_widget.get_editor_property("Target_Mesh_Picker")
-        if mesh_picker:
-            target_retarget_mesh = mesh_picker
-    except Exception:
-        pass
     folder_path_field = active_widget.get_editor_property("Folder_Path_Field")
     folder_path_text = folder_path_field.get_text()
     folder_path = unreal.TextLibrary.conv_text_to_string(folder_path_text)
+    
+    if not folder_path:
+        unreal.EditorDialog.show_message(
+            "Select Directory","Please select a valid import directory before importing",
+            unreal.AppMsgType.OK
+            )
+        return
+        
+    if auto_retarget and not target_mesh:
+        unreal.EditorDialog.show_message(
+            "Target Mesh Required",
+            "Auto Retarget is enabled. Please select a Target Skeletal Mesh before continuing.",
+            unreal.AppMsgType.OK
+            )
+        return
     
     category_dropdown = active_widget.get_editor_property("Category_Dropdown")
     category_str = category_dropdown.get_selected_option()
     category = None if category_str in ("None", "Auto-Detect") else category_str
      
     if folder_path:
-        execute_import_pipeline(folder_path, category, auto_retarget=auto_retarget, target_retarget_mesh=target_retarget_mesh)
+        execute_import_pipeline(folder_path, category, auto_retarget=auto_retarget, target_retarget_mesh=target_mesh)
         
         on_cancel_clicked()
        
@@ -276,6 +286,7 @@ def on_preview_clicked():
     subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
     widget_blueprint = unreal.load_asset("/Game/Python/Widgets/EUW_AssetPort_Preview")
     
+    auto_retarget, target_mesh = _get_retarget_settings()
    
     folder_path_field = active_widget.get_editor_property("Folder_Path_Field")
     folder_path_text = folder_path_field.get_text()
@@ -288,6 +299,15 @@ def on_preview_clicked():
             unreal.AppMsgType.OK
         )
         return
+    
+    if auto_retarget and not target_mesh:
+        unreal.EditorDialog.show_message(
+            "Target Mesh Required",
+            "Auto Retarget is enabled. Please select a Target Skeletal Mesh before continuing.",
+            unreal.AppMsgType.OK
+            )
+        return
+        
     category_dropdown = active_widget.get_editor_property("Category_Dropdown")
     category_str = category_dropdown.get_selected_option()
     category = None if category_str in ("None", "Auto-Detect") else category_str
@@ -300,7 +320,7 @@ def on_preview_clicked():
         last_category = category
         
         importer = AssetImporter()
-        groups, report = importer.import_directory(folder_path, category, True)
+        groups, report = importer.import_directory(folder_path, category, True, auto_retarget=auto_retarget, target_retarget_mesh=target_mesh)
         log_pipeline_report(report, folder_path, True)
         
         max_udim_name_len = 0
@@ -312,7 +332,7 @@ def on_preview_clicked():
         
         pad_width = max_udim_name_len + 10
         for group in groups:  
-            display_folder = group.folder_path
+            display_folder = group.folder_path or "/Game/Animations"
             if display_folder.startswith("/Game/"):
                 display_folder = display_folder[6:]
             if isinstance(group, AtlasGroup):
@@ -334,10 +354,11 @@ def on_preview_clicked():
                 else:
                     import_asset_name.append(f"{display_folder}|{texture_name}")
             for anim in getattr(group, "animation_list", []):
-                anim_name = anim.ue_path.split("/")[-1]
-                import_asset_name.append(f"{display_folder}|Animations/{anim_name}")
+                anim_name = anim.ue_path.split("/")[-1] if anim.ue_path else anim.base_name
+                sub_path = f"Animations/{anim_name}" if group.mesh else anim_name
+                import_asset_name.append(f"{display_folder}|{sub_path}")
         
-            if config.auto_create_mi:
+            if config.auto_create_mi and(group.mesh or group.texture_list):
                 if isinstance(group, AssetGroup) and group.is_multi_material:
                     for slot_name in group.material_slots.keys():
                         import_asset_name.append(f"{display_folder}|Materials/MI_{group.base_name}_{slot_name}")

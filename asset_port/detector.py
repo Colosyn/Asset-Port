@@ -312,12 +312,20 @@ class AssetDetector:
         chat_candidates.sort(key=lambda g: len(g.base_name), reverse=True)  
              
         for anim in anims: 
+            anim_dir = Path(anim.source_path).parent if anim.source_path else None
+            
+            local_chars = [g for g in chat_candidates if g.mesh and Path(g.mesh.source_path).parent == anim_dir]
             
             matching_char = next((g for g in chat_candidates if anim.base_name == g.base_name or anim.base_name.startswith(f"{g.base_name}_")),None)
+            
+            if not matching_char and len(local_chars) == 1:
+                matching_char = local_chars[0]
+                
             if matching_char:
                 matching_char.animation_list.append(anim)
             else:
                 parent = Path(anim.source_path).parent.name if anim.source_path else ""
+                parent = self._sanitize_name(parent)
                 if parent and parent not in (".","temp","Downloads","Desktop"):
                     pack_name = parent
                 elif "_" in anim.base_name:

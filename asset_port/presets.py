@@ -86,9 +86,12 @@ def get_animation_setting(skeleton = None):
         
     anim_data = fbx.anim_sequence_import_data
     if anim_data:
-        anim_data.animation_length = unreal.FBXAnimationLengthImportType.FBXALIT_EXPORTED_TIME
-        anim_data.import_bone_tracks = True
-        anim_data.snap_to_closest_frame_boundary = True
+        try:
+            anim_data.set_editor_property("animation_length",unreal.FBXAnimationLengthImportType.FBXALIT_EXPORTED_TIME)
+            anim_data.set_editor_property("import_bone_tracks", True)
+            anim_data.set_editor_property("snap_to_closest_frame_boundary", True)
+        except Exception:
+            pass
         
     return fbx
      

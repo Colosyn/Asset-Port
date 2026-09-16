@@ -36,6 +36,9 @@ def asset_validator(asset : DetectedAsset ):
 def group_validator(group : AssetGroup):
     
     warnings = []
+    if group.mesh is None and not group.texture_list:
+        return warnings
+    
     found_texture = []
     textures = group.texture_list
     for texture in textures:

@@ -72,6 +72,8 @@ class AssetImporter():
         
     def build_materials(self, group_asset, decisions=None, report= None):
         for group in group_asset:
+            if not group.mesh and not group.texture_list:
+                continue
             if isinstance(group, AtlasGroup):
                 mi_report = create_atlas_material_instance(group, self.config, decisions)
                 blend_mode = decisions.get(f"MI_{group.kit_name}", "Opaque") if decisions else "Opaque"
@@ -261,9 +263,11 @@ class AssetImporter():
                     task_pairs.append((asset, task)) 
             
             ref_asset = group.mesh or (group.texture_list[0] if group.texture_list else (group.animation_list[0] if group.animation_list else None))
-            if ref_asset and ref_asset.ue_path:
+            if ref_asset:
+                if not ref_asset.ue_path:
+                    _, ref_asset.ue_path = self.router.get_folder_path(ref_asset,category, character_name=character_name)
                 folder_parts = ref_asset.ue_path.split("/")[:-1]
-                if folder_parts and folder_parts[-1] == "Textures":
+                if folder_parts and folder_parts[-1] in ("Textures", "Animations"):
                     folder_parts = folder_parts[:-1]
                 group.folder_path = "/".join(folder_parts)   
 
@@ -291,9 +295,10 @@ class AssetImporter():
                 if not imported_objs:
                     continue
                 for obj in imported_objs:
-                    current_path = obj.get_package().get_name()
-                    if current_path != asset.ue_path:
-                        unreal.EditorAssetLibrary.rename_asset(current_path, asset.ue_path)
+                    if isinstance(obj, (unreal.StaticMesh, unreal.SkeletalMesh, unreal.Texture2D)):
+                        current_path = obj.get_package().get_name()
+                        if current_path != asset.ue_path:
+                            unreal.EditorAssetLibrary.rename_asset(current_path, asset.ue_path)
          
         anim_task_pairs = []
         for group in group_asset:
