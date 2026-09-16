@@ -396,11 +396,10 @@ def on_preview_clicked():
                
 def  on_preview_import_clicked():
     global last_folder_path, last_category, last_target_mesh, last_auto_retarget
-    
+    on_preview_cancel_clicked()
     if last_folder_path:
         execute_import_pipeline(last_folder_path,last_category,auto_retarget=last_auto_retarget, target_retarget_mesh= last_target_mesh )
         
-    on_preview_cancel_clicked()
     
 def on_preview_cancel_clicked():
     global preview_widget

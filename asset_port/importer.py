@@ -8,7 +8,7 @@ from asset_port.models import AssetType, PipelineReport, TextureSlot, AtlasGroup
 from asset_port.Validator import asset_validator, group_validator, atlas_group_validator
 from asset_port.config import config_loader
 from asset_port.materials import create_material_instance,create_atlas_material_instance
-from asset_port.retarget import _clean_character_name,get_or_create_ik_rig,get_or_create_retargeter, auto_characterize_ik_rig,setup_retargeter, batch_retarget_animation
+from asset_port.retarget import get_character_folder, _clean_character_name,get_or_create_ik_rig,get_or_create_retargeter, auto_characterize_ik_rig,setup_retargeter, batch_retarget_animation
 
 def check_source_has_alpha(file_path):
     if not file_path:
@@ -291,6 +291,13 @@ class AssetImporter():
                         if isinstance(obj, unreal.SkeletalMesh):
                             character_skeletons[asset.base_name] = obj.get_editor_property("skeleton")
                             character_meshs[asset.base_name] = obj
+                            skel = obj.get_editor_property("skeleton")
+                            phys = obj.get_editor_property("physics_asset")
+                            if skel: 
+                                unreal.EditorAssetLibrary.save_loaded_asset(skel)
+                            if phys: 
+                                unreal.EditorAssetLibrary.save_loaded_asset(phys)
+                                
                 imported_objs = task.get_objects()
                 if not imported_objs:
                     continue
@@ -426,8 +433,8 @@ class AssetImporter():
                             retargeted = batch_retarget_animation(retargeter,source_mesh, target_retarget_mesh, group_anim_objects) 
                             report.animations_retargeted += len(retargeted)
                             
-                            target_name = _clean_character_name(target_retarget_mesh)
-                            dest_folder = f"/Game/Characters/{target_name}/Animations/{group.base_name}"
+                            char_folder = get_character_folder(target_retarget_mesh)
+                            dest_folder = f"{char_folder}/Animations/{group.base_name}"
                             unreal.EditorAssetLibrary.make_directory(dest_folder)
                             for asset_dat in retargeted:
                                 obj = asset_dat.get_asset()

@@ -8,10 +8,15 @@ def _clean_character_name(mesh: unreal.SkeletalMesh) -> str:
             return name[len(prefix):]
     return name
 
+def get_character_folder(mesh: unreal.SkeletalMesh):
+    pkg = mesh.get_package().get_name()
+    parts = [p for p in pkg.split("/")[:-1] if p not in ("Meshes", "Mesh")]
+    return "/".join(parts)
+
 def get_or_create_ik_rig(skeletal_mesh: unreal.SkeletalMesh, package_path: Optional[str] =None) -> unreal.IKRigDefinition:
    
     char_name = _clean_character_name(skeletal_mesh)
-    target_folder = package_path or f"/Game/Characters/{char_name}/Rigs"
+    target_folder = package_path or f"{get_character_folder(skeletal_mesh)}/Rigs"
     asset_name = f"IK_{char_name}"
     asset_path = f"{target_folder}/{asset_name}"
     if unreal.EditorAssetLibrary.does_asset_exist(asset_path):
@@ -27,7 +32,7 @@ def get_or_create_retargeter(source_mesh: unreal.SkeletalMesh, target_mesh: unre
     src_name = _clean_character_name(source_mesh)
     tgt_mesh = _clean_character_name(target_mesh)
     
-    target_folder = package_path or F"/Game/Characters/{tgt_mesh}/Rigs"
+    target_folder = package_path or F"{get_character_folder(target_mesh)}/Rigs"
     asset_name = f"RTG_{src_name}_to_{tgt_mesh}"
     asset_path = f"{target_folder}/{asset_name}"
     if unreal.EditorAssetLibrary.does_asset_exist(asset_path):
