@@ -20,6 +20,24 @@ PREIVEW_ID = unreal.Name("/Game/Python/Widgets/EUW_AssetPort_Preview.EUW_AssetPo
 TRANSPARENCY_ID = unreal.Name("/Game/Python/Widgets/EUW_TransparencySetup.EUW_TransparencySetup_ActiveTab")
 SKELETON_ID = unreal.Name("/Game/Python/Widgets/EUW_SkeletonSetup.EUW_SkeletonSetup_ActiveTab")
 
+def safe_close_tab(tab_id):
+    global active_widget, preview_widget, transparency_widget, skeleton_widget
+    if tab_id == TAB_ID:
+        active_widget = None
+    elif tab_id == PREIVEW_ID:
+        preview_widget = None
+    elif tab_id == TRANSPARENCY_ID:
+        transparency_widget = None
+    elif tab_id == SKELETON_ID:
+        skeleton_widget = None
+        
+    def _tick(delta_time):
+        unreal.unregister_slate_post_tick_callback(handle)
+        subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
+        if subsystem and subsystem.does_tab_exist(tab_id):
+            subsystem.close_tab_by_id(tab_id)
+    handle = unreal.register_slate_post_tick_callback(_tick)
+    
 def _get_retarget_settings():
     try:
         box = active_widget.get_editor_property("Checkbox_AutoRetarget")
@@ -123,16 +141,11 @@ def on_skeleton_confirm(pack_names, on_confirm_callback):
                 except Exception as e:
                     unreal.log_error(f"AssetPort: Error reading skeleton for {pack_name}: {e}")
     finally:
-        subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
-        subsystem.close_tab_by_id(SKELETON_ID)
-        skeleton_widget = None
+        safe_close_tab(SKELETON_ID)
         on_confirm_callback(decisions)
         
 def on_skeleton_cancel(on_confirm_callback):
-    global skeleton_widget
-    subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
-    subsystem.close_tab_by_id(SKELETON_ID)
-    skeleton_widget = None
+    safe_close_tab(SKELETON_ID)
     on_confirm_callback({})      
         
 def on_popup_confirm(items, on_confirm_callback):
@@ -166,16 +179,11 @@ def on_popup_confirm(items, on_confirm_callback):
         
     finally:
                 
-        subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
-        subsystem.close_tab_by_id(TRANSPARENCY_ID)
-        transparency_widget = None
+        safe_close_tab(TRANSPARENCY_ID)
         on_confirm_callback(decisions)
             
 def on_popup_cancel(on_confirm_callback):
-    global transparency_widget
-    subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
-    subsystem.close_tab_by_id(TRANSPARENCY_ID)
-    transparency_widget = None
+    safe_close_tab(TRANSPARENCY_ID)
     on_confirm_callback({})
                           
 def execute_import_pipeline(folder_path, category, target_skeleton=None, auto_retarget=False, target_retarget_mesh=None):
@@ -271,16 +279,11 @@ def on_import_clicked():
     if folder_path:
         execute_import_pipeline(folder_path, category, auto_retarget=auto_retarget, target_retarget_mesh=target_mesh)
         
-        on_cancel_clicked()
+        safe_close_tab(TAB_ID)
        
 def on_cancel_clicked():
-    global active_widget
-    if active_widget:
-        subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
-        subsystem.close_tab_by_id(TAB_ID)
-        active_widget = None
-    active_widget = None
-     
+    safe_close_tab(TAB_ID)
+    
 def on_preview_clicked():
     
     global active_widget,  preview_widget, last_folder_path, last_category, last_target_mesh, last_auto_retarget
@@ -392,18 +395,14 @@ def on_preview_clicked():
         preview_widget.set_editor_property("Failed_List_Items", failed_asset_name)
         preview_widget.call_method("RefreshPreviewUI")
         
-        on_cancel_clicked()
+        safe_close_tab(TAB_ID)
                
 def  on_preview_import_clicked():
     global last_folder_path, last_category, last_target_mesh, last_auto_retarget
-    on_preview_cancel_clicked()
+   
     if last_folder_path:
         execute_import_pipeline(last_folder_path,last_category,auto_retarget=last_auto_retarget, target_retarget_mesh= last_target_mesh )
-        
+    safe_close_tab(PREIVEW_ID)
     
 def on_preview_cancel_clicked():
-    global preview_widget
-    if preview_widget:
-        subsystem = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
-        subsystem.close_tab_by_id(PREIVEW_ID)
-        preview_widget = None
+    safe_close_tab(PREIVEW_ID)

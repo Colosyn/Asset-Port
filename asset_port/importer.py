@@ -440,7 +440,10 @@ class AssetImporter():
                                 obj = asset_dat.get_asset()
                                 if obj:
                                     unreal.EditorAssetLibrary.save_loaded_asset(obj)
-                                    dest_path = f"{dest_folder}/{asset_dat.asset_name}"
+                                    clean_name = str(asset_dat.asset_name).replace("RTG_TMP_", "")
+                                    dest_path = f"{dest_folder}/{clean_name}"
+                                    if unreal.EditorAssetLibrary.does_asset_exist(dest_path):
+                                        unreal.EditorAssetLibrary.delete_asset(dest_path)
                                     if unreal.EditorAssetLibrary.rename_asset(str(asset_dat.package_name), dest_path):
                                         unreal.EditorAssetLibrary.save_asset(dest_path)
                                 

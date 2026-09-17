@@ -86,19 +86,22 @@ def setup_retargeter(retargeter: unreal.IKRetargeter, source_ik_rig: unreal.IKRi
     
     rtg_controller.auto_map_chains(unreal.AutoMapChainType.FUZZY, True)
     
+    src_chains = [str(c.chain_name).lower() for c in unreal.IKRigController.get_controller(source_ik_rig).get_retarget_chains()]
+    has_metacarpals = any("metacarpal" in c for c in src_chains)
+    has_root = any(c == "root" for c in src_chains)
+    
+    for tgt_chains in unreal.IKRigController.get_controller(target_ik_rig).get_retarget_chains():
+        name = str(tgt_chains.chain_name)
+        if ("metacarpal" in name.lower() and not has_metacarpals) or (name.lower() == "root" and not has_root):
+            rtg_controller.set_source_chain(unreal.Name("None"), tgt_chains.chain_name)
+    
     if hasattr(rtg_controller, "add_default_ops"):
         rtg_controller.add_default_ops()
-        
-    if hasattr(rtg_controller, "auto_align_all_bones"):
-        try:
-            rtg_controller.auto_align_all_bones(unreal.RetargetSourceOrTarget.TARGET)
-        except Exception:
-            pass
-        
+          
     unreal.EditorAssetLibrary.save_loaded_asset(retargeter)
     return True
 
-def batch_retarget_animation(retargeter: unreal.IKRetargeter, source_mesh: unreal.SkeletalMesh, target_mesh: unreal.SkeletalMesh, anim_assets: list, search: str ="", replace: str ="", prefix: str ="", suffix: str ="",) -> list:
+def batch_retarget_animation(retargeter: unreal.IKRetargeter, source_mesh: unreal.SkeletalMesh, target_mesh: unreal.SkeletalMesh, anim_assets: list, search: str ="", replace: str ="", prefix: str ="RTG_TMP_", suffix: str ="",) -> list:
     
     if not anim_assets:
         return []
