@@ -97,7 +97,16 @@ def setup_retargeter(retargeter: unreal.IKRetargeter, source_ik_rig: unreal.IKRi
     
     if hasattr(rtg_controller, "add_default_ops"):
         rtg_controller.add_default_ops()
-          
+    
+    src_h = max(1.0, source_mesh.get_bounds().box_extent.z * 2.0)
+    tgt_h = max(1.0, target_mesh.get_bounds().box_extent.z * 2.0)
+    scale_ratio = tgt_h / src_h
+    
+    if hasattr(rtg_controller, "get_root_settings"):
+        root_settings = rtg_controller.get_root_settings()
+        root_settings.scale_vertical = scale_ratio
+        rtg_controller.set_root_settings(root_settings)
+             
     unreal.EditorAssetLibrary.save_loaded_asset(retargeter)
     return True
 
