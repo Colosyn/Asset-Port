@@ -5,6 +5,7 @@ from asset_port.importer import AssetImporter
 from asset_port.logger import log_pipeline_report
 from asset_port.config import config_loader
 from asset_port.models import TextureSlot, AtlasGroup, AssetGroup
+from asset_port.retarget import get_character_folder, _clean_character_name
 active_widget = None
 preview_widget = None
 last_folder_path = ""
@@ -342,8 +343,11 @@ def on_preview_clicked():
             display_folder = group.folder_path or "/Game/Animations"
             if display_folder.startswith("/Game/"):
                 display_folder = display_folder[6:]
+            anims = getattr(group, "animation_list", [])
             if isinstance(group, AtlasGroup):
-                display_folder = f"{display_folder}  [Atlas: {group.mesh_count} Meshes]"  
+                display_folder = f"{display_folder}  [Atlas: {group.mesh_count} Meshes]" 
+            elif anims:
+                display_folder = f"{display_folder}  [{len(anims)} Animations]" 
             if isinstance(group, AssetGroup) and  group.mesh is not None:
                 mesh_name = group.mesh.ue_path.split("/")[-1]
                 import_asset_name.append(f"{display_folder}|{mesh_name}")
@@ -364,6 +368,24 @@ def on_preview_clicked():
                 anim_name = anim.ue_path.split("/")[-1] if anim.ue_path else anim.base_name
                 sub_path = f"Animations/{anim_name}" if group.mesh else anim_name
                 import_asset_name.append(f"{display_folder}|{sub_path}")
+                
+            if auto_retarget and target_mesh and anims:
+                raw_src = group.mesh.base_name if group.mesh else group.base_name
+                src_name =raw_src.removeprefix("SKM_").removeprefix("SK_").removeprefix("skm_").removeprefix("sk_")
+                tgt_name = _clean_character_name(target_mesh)
+                char_folder = get_character_folder(target_mesh).removeprefix("/Game/")
+                import_asset_name.append(f"{display_folder}|Rigs/IK_{src_name}")
+                
+                tgt_rigs = f"{char_folder}/Rigs"
+                tgt_ik_path = f"{get_character_folder(target_mesh)}/Rigs/IK_{tgt_name}"
+                if not unreal.EditorAssetLibrary.does_asset_exist(tgt_ik_path):
+                    import_asset_name.append(f"{tgt_rigs}|IK_{tgt_name}")
+                    
+                import_asset_name.append(f"{tgt_rigs}|RTG_{src_name}_to_{tgt_name}")
+                retarget_folder = f"{char_folder}/Animations/{group.base_name}   [{len(anims)} Retargeted to {target_mesh.get_name()}]"
+                for anim in group.animation_list:
+                    anim_name = anim.ue_path.split("/")[-1] if anim.ue_path else anim.base_name
+                    import_asset_name.append(f"{retarget_folder}|{anim_name}")
         
             if config.auto_create_mi and(group.mesh or group.texture_list):
                 if isinstance(group, AssetGroup) and group.is_multi_material:
