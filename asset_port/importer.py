@@ -392,13 +392,19 @@ class AssetImporter():
                             unreal.log(f"AssetPort: BaseColour {asset.base_name} has_alpha -> {asset.has_alpha}")
                 
                 if asset.asset_type == AssetType.ANIMATION:
-                    report.animations_imported +=1
-                    if asset.is_root_motion:
-                        for obj in (task.get_objects() or []):
-                            if isinstance(obj, unreal.AnimSequence):
+                    created_anims = [obj for obj in (task.get_objects() or []) if isinstance(obj, unreal.AnimSequence)]
+                    if created_anims:
+                        report.animations_imported += 1
+                        if asset.is_root_motion:
+                            for obj in created_anims:
                                 obj.set_editor_property("enable_root_motion", True)
                                 unreal.EditorAssetLibrary.save_loaded_asset(obj)
                                 unreal.log(f"AssetPort: Enable root motion for {asset.base_name}")
+                                    
+                    else:
+                        report.asset_failed += 1
+                        report.errors.append(f"Animation {asset.base_name} rejected: Incompatible bone tracks for target skeleton.")
+                    
                                 
             if not dry_run and auto_retarget and target_retarget_mesh:
                 target_ik_rig = get_or_create_ik_rig(target_retarget_mesh)
