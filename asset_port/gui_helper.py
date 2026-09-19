@@ -149,9 +149,8 @@ def on_skeleton_confirm(pack_names, on_confirm_callback):
             unreal.AppMsgType.OK
         )
         return
-    
-    safe_close_tab(SKELETON_ID)
     on_confirm_callback(decisions)
+    safe_close_tab(SKELETON_ID)
         
 def on_skeleton_cancel(on_confirm_callback):
     safe_close_tab(SKELETON_ID) 
@@ -187,35 +186,36 @@ def on_popup_confirm(items, on_confirm_callback):
         unreal.log_error(f"AssetPort: Popup confirm error: {err_main}")
         
     finally:
-                
-        safe_close_tab(TRANSPARENCY_ID)
         on_confirm_callback(decisions)
+        safe_close_tab(TRANSPARENCY_ID)
             
 def on_popup_cancel(on_confirm_callback):
-    safe_close_tab(TRANSPARENCY_ID)
     on_confirm_callback({})
+    safe_close_tab(TRANSPARENCY_ID)
                           
 def execute_import_pipeline(folder_path, category, target_skeleton=None, auto_retarget=False, target_retarget_mesh=None):
     importer = AssetImporter()
     
     groups_preview , _ = importer.import_directory(folder_path, category, dry_run=True,)
     standalone_packs = scan_for_standalone_packs(groups_preview)
-    
-    def start_live_import(skeleton_decisions):
+  
+    def _do_live_import(skeleton_decisions):
         final_skeletons = skeleton_decisions if skeleton_decisions else target_skeleton
         groups, report = importer.import_directory(folder_path, category, dry_run=False,target_skeleton=final_skeletons,auto_retarget=auto_retarget, target_retarget_mesh=target_retarget_mesh,) 
-        
         items = scan_for_transparency(groups)
-    
         def complete_build(decisions):
-            importer.build_materials(groups,decisions, report)
+            importer.build_materials(groups, decisions, report)
             log_pipeline_report(report, folder_path)
-        
         if items:
             show_transparency_popup(items, complete_build)
-        
         else:
             complete_build({})
+                    
+    def start_live_import(skeleton_decisions):
+        def _deferred(delta_time):
+            unreal.unregister_slate_post_tick_callback(defer_handle)
+            _do_live_import(skeleton_decisions)
+        defer_handle = unreal.register_slate_post_tick_callback(_deferred)        
         
     if standalone_packs and not target_skeleton:
         show_skeleton_popup(standalone_packs, start_live_import)
