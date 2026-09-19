@@ -3,8 +3,9 @@
 An automated, pipeline-friendly batch importer and organizer for **Unreal Engine 5** using Python and Editor Utility Widgets. Stop importing meshes and textures one-by-one; AssetPort automates category routing, texture settings configuration, material instance generation, and mesh linkage in a single click.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Unreal Engine Version](https://img.shields.io/badge/Unreal%20Engine-5.3%2B%20Supported-blue)](https://www.unrealengine.com/)
+[![Unreal Engine Version](https://img.shields.io/badge/Unreal%20Engine-5.4%2B%20Supported-blue)](https://www.unrealengine.com/)
 [![Language: Python](https://img.shields.io/badge/Language-Python-green)](https://www.python.org/)
+
 
 ---
 ## Demo
@@ -36,7 +37,8 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 * **🏺 Atlas & Modular Kit Detection**: Automatically detects kit-based asset groups using hyphen delimiters (e.g. `SM_Rock01-RockKit.fbx`). Unifies all kit meshes under a flat folder (`/Game/Environment/RockKit/`), cleans asset names on import (`SM_Rock01`), shares a single Material Instance (`MI_RockKit`) across all meshes at slot 0, and badges kit summaries in the Preview UI (`[Atlas: X Meshes]`).
 * **📐 Static Mesh LOD Import**: Imports LOD groups embedded in one FBX and attaches separately exported `_LOD0`, `_LOD1`, ... FBX files to regular or Atlas Static Meshes.
 * **⚡ Smart Nanite Automation**: Intelligently evaluates mesh polygon counts against a configurable threshold (default: 2,500 triangles). Automatically enables Nanite for dense opaque meshes while preserving traditional LOD chains and non-Nanite transparent materials.
-
+* **🎬 Smart Animation Ingestion**: Auto-detects animation FBX files (`a_`, `anim_`, or prefix-less tracks), enforces mesh-first ordering so skeletons bind cleanly, and extracts tokens like `_RM` to auto-enable Root Motion. Launches an interactive dialog (`EUW_SkeletonSetup`) to map standalone animation packs to existing project skeletons.
+* **🔄 Automated IK Retargeting**: Instantly transfers imported animations onto Manny, Quinn, or any project character with zero manual setup. Automatically generates IK Rigs, maps bone chains, and provisions retargeters on the fly. Ensures natural finger posing with no twisted knuckles and dynamically scales character height to eliminate foot sliding and floor clipping.
 
 ---
 
@@ -57,6 +59,9 @@ To install AssetPort, place the script files and assets inside your Unreal Engin
 
 > [!NOTE]
 > Make sure **Python Foundation Scripting** and **Editor Scripting Utilities** plugins are enabled in your Unreal Engine project settings.
+
+> [!NOTE]
+> **UE 5.3 Support Dropped**: Starting with version 1.7.0, support for Unreal Engine 5.3 has been dropped due to modern IK Retargeter Python APIs requiring UE 5.4+. If your project is on UE 5.3, please use [AssetPort v1.6.1](https://github.com/Colosyn/Asset-Port/releases/tag/v1.6.1).
 
 ---
 
