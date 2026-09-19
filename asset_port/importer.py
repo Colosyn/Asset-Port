@@ -8,7 +8,7 @@ from asset_port.models import AssetType, PipelineReport, TextureSlot, AtlasGroup
 from asset_port.Validator import asset_validator, group_validator, atlas_group_validator
 from asset_port.config import config_loader
 from asset_port.materials import create_material_instance,create_atlas_material_instance
-from asset_port.retarget import get_character_folder, _clean_character_name,get_or_create_ik_rig,get_or_create_retargeter, auto_characterize_ik_rig,setup_retargeter, batch_retarget_animation
+from asset_port.retarget import get_character_folder,get_mesh_for_skeleton, _clean_character_name,get_or_create_ik_rig,get_or_create_retargeter, auto_characterize_ik_rig,setup_retargeter, batch_retarget_animation
 
 def check_source_has_alpha(file_path):
     if not file_path:
@@ -416,6 +416,10 @@ class AssetImporter():
                             continue
                         
                         source_mesh = character_meshs.get(group.base_name)
+                        if not source_mesh and isinstance(target_skeleton, dict):
+                            skel = target_skeleton.get(group.base_name)
+                            source_mesh = get_mesh_for_skeleton(skel)
+                            
                         if not  source_mesh or source_mesh == target_retarget_mesh:
                             continue
                         

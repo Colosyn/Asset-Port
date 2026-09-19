@@ -1,6 +1,20 @@
 import unreal
 from typing import Optional
 
+def get_mesh_for_skeleton(skeleton: unreal.Skeleton):
+    if not skeleton:
+        return None
+    pkg = skeleton.get_package().get_name()
+    
+    candidate = pkg.replace("_Skeleton", "")
+    if unreal.EditorAssetLibrary.does_asset_exist(candidate):
+        return unreal.EditorAssetLibrary.load_asset(candidate)
+    for ref in unreal.EditorAssetLibrary.find_package_referencers_for_asset(pkg):
+        asset = unreal.EditorAssetLibrary.load_asset(ref)
+        if isinstance(asset, unreal.SkeletalMesh):
+            return asset
+    return None
+
 def _clean_character_name(mesh: unreal.SkeletalMesh) -> str:
     name = mesh.get_name()
     for prefix in ("SKM_", "SK_", "skm_", "sk_"):
