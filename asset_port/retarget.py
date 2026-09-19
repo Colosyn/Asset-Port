@@ -98,20 +98,58 @@ def setup_retargeter(retargeter: unreal.IKRetargeter, source_ik_rig: unreal.IKRi
     rtg_controller.set_preview_mesh(unreal.RetargetSourceOrTarget.SOURCE, source_mesh)
     rtg_controller.set_preview_mesh(unreal.RetargetSourceOrTarget.TARGET, target_mesh)
     
-    rtg_controller.auto_map_chains(unreal.AutoMapChainType.FUZZY, True)
-    
     src_chains = [str(c.chain_name).lower() for c in unreal.IKRigController.get_controller(source_ik_rig).get_retarget_chains()]
     has_metacarpals = any("metacarpal" in c for c in src_chains)
     has_root = any(c == "root" for c in src_chains)
     
+    if hasattr(rtg_controller, "add_default_ops"):
+        need_ops =True
+        if hasattr(rtg_controller, "get_num_retarget_ops") and rtg_controller.get_num_retarget_ops() > 0:
+            for op_idx in range(rtg_controller.get_num_retarget_ops()):
+                if "fk" in str(rtg_controller.get_op_name(op_idx)).lower():
+                    if len(rtg_controller.get_op_controller(op_idx).get_settings().get_editor_property("chains_to_retarget")) >0:
+                        need_ops = False
+                        break
+        if need_ops:
+            while hasattr(rtg_controller, "remove_retarget_op") and rtg_controller.get_num_retarget_ops() > 0:
+                rtg_controller.remove_retarget_op(0)
+            rtg_controller.add_default_ops()
+            
+    rtg_controller.auto_map_chains(unreal.AutoMapChainType.FUZZY, True)
+        
+    
+    finger_kw = ("thumb","index","middle", "ring", "pinky")
+    fk_mode = getattr(getattr(unreal, "FKChainRotationMode", None), "ONE_TO_ONE", None)
+    legacy_mode = getattr(getattr(unreal, "RetargetRotationMode", None), "ONE_TO_ONE", None)
+   
     for tgt_chains in unreal.IKRigController.get_controller(target_ik_rig).get_retarget_chains():
         name = str(tgt_chains.chain_name)
         if ("metacarpal" in name.lower() and not has_metacarpals) or (name.lower() == "root" and not has_root):
             rtg_controller.set_source_chain(unreal.Name("None"), tgt_chains.chain_name)
     
-    if hasattr(rtg_controller, "add_default_ops"):
-        rtg_controller.add_default_ops()
+    if hasattr(rtg_controller, "get_num_retarget_ops"):
+        for op_idx in range(rtg_controller.get_num_retarget_ops()):
+            if "fk" in str(rtg_controller.get_op_name(op_idx)).lower():
+                op_c = rtg_controller.get_op_controller(op_idx)
+                op_settings = op_c.get_settings()
     
+                new_chains = []
+                for ch in op_settings.get_editor_property("chains_to_retarget"):
+                    t_name = str(ch.get_editor_property("target_chain_name")).lower()
+                    if "metacarpal" in t_name and not has_metacarpals:
+                        ch.set_editor_property("enable_fk", False)
+                    elif any(f in t_name for f in finger_kw) and fk_mode is not None:
+                        ch.set_editor_property("rotation_mode", fk_mode)
+                    new_chains.append(ch)
+                op_settings.set_editor_property("chains_to_retarget", new_chains)
+                op_c.set_settings(op_settings)
+                break      
+    else:
+        for s in rtg_controller.get_all_chain_settings():
+            if any(k in str(s.get_editor_property("target_chain")).lower() for k in finger_kw):
+                if legacy_mode is not None:
+                    s.get_editor_property("settings").get_editor_property("fk").set_editor_property("rotation_mode", legacy_mode)
+                    
     src_h = max(1.0, source_mesh.get_bounds().box_extent.z * 2.0)
     tgt_h = max(1.0, target_mesh.get_bounds().box_extent.z * 2.0)
     scale_ratio = tgt_h / src_h
