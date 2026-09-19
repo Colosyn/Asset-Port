@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0] - 2026-09-19
+
+### Added
+- **Automated Animation Retargeting (UE 5.4 – 5.8)**: Complete pipeline support for batch retargeting animations onto project humanoid rigs (Manny, Quinn, or custom characters). Automatically provisions IK Rigs, configures 1:1 finger FK rotation, decouples unused target metacarpals, scales height dynamically to eliminate foot sliding, and seamlessly supports both legacy monolithic retargeting (UE 5.4/5.5) and Modular Retarget Ops (UE 5.6–5.8).
+- **Interactive Skeleton Resolution Dialog (`EUW_SkeletonSetup`)**: Non-modal Slate dialog allowing technical artists to resolve and batch unassigned standalone animation packs to project target skeletons.
+- **Prefix-less FBX Asset Inference**: Automatically pre-scans prefix-less `.fbx` files to infer whether an asset is a Static Mesh, Skeletal Mesh, or Animation Sequence based on skin clusters and curve tracks.
+- **Smart String Sanitization**: Normalizes spaces, parentheses, and illegal characters in filenames into engine-safe identifiers, preventing asset registry and routing failures.
+- **Root Motion & Token Extraction**: Automatically parses `_RM` (enables Root Motion), `_IP` (In-Place), and `_Loop` tokens from FBX tracks during post-import.
+
+### Fixed
+- **Slate Modal Lifecycle & Crash on Confirm/Cancel**: Implemented post-tick Slate execution deferral when closing or confirming import popups, eliminating editor access violations and hard crashes.
+
 ## [1.6.1] - 2026-09-08
 
 ### Fixed

@@ -34,6 +34,12 @@ Texture: [Prefix]_[Category]_[KitName]_[Suffix].[extension]
 [StaticMeshName]_LOD2.fbx
 ```
 *Example*: `SM_env_Rock_LOD0.fbx`, `SM_env_Rock_LOD1.fbx`. An unsuffixed base mesh such as `SM_env_Rock.fbx` can also be paired with `_LOD1` and later files. Atlas LODs place the marker after the kit name, for example `SM_env_Rock01-RockKit_LOD1.fbx`.
+
+### Animation Assets:
+```text
+[Prefix]_[Category]_[BaseName]_[AnimName]_[Token].[extension]
+
+*Example*: `A_char_Manny_Run_RM.fbx`, `Anim_Zombie_Walk_Loop.fbx`, or `A_Jump_IP.fbx`.
 ---
 
 
@@ -48,9 +54,7 @@ Prefixes tell the tool what type of asset is being imported. This is case-insens
 | `t_` | Texture | `unreal.Texture2D` |
 | `a_`, `anim_` | Animation | `unreal.AnimSequence` |
 
-*If no prefix is found, supported image extensions are inferred as textures and
-`.fbx` files are inferred as static meshes. Explicit prefixes still take
-priority and should be used for skeletal meshes and animations.*
+*If no prefix is found, supported image extensions are inferred as textures. For prefix-less `.fbx` files, AssetPort pre-scans the file contents: files containing animation curve tracks are inferred as Animations (`unreal.AnimSequence`), skinned meshes as Skeletal Meshes (`unreal.SkeletalMesh`), and rigid meshes as Static Meshes (`unreal.StaticMesh`).*
 
 ---
 
@@ -173,3 +177,15 @@ When `"smart_nanite": true` is enabled in `importer_config.json`:
 2. **LOD Exclusion:** Meshes with custom LOD chains (`_LOD1`, etc.) or multiple LOD levels are skipped to preserve custom hand-crafted LOD budgets.
 3. **Material Blend Mode Guardrail:** Masked and Translucent meshes bypass Nanite to prevent overdraw and rasterization artifacts.
 4. **Subsystem Build:** Settings are committed via `StaticMeshEditorSubsystem.set_nanite_settings` with change application enabled.
+
+## 9. Animation & Retargeting Behavior
+1. **Animation Tokens (Suffixes)**:
+   * **`_RM`**: Automatically enables **Root Motion** on the imported `AnimSequence`.
+   * **`_IP`**: Explicitly denotes an **In-Place** animation track.
+   * **`_Loop`**: Denotes a looping animation sequence.
+2. **Sanitization**: Filenames with spaces, parentheses, or illegal symbols (e.g. `Zombie Crawl (1).fbx`) are automatically sanitized into clean engine identifiers (`Zombie_Crawl_1`).
+3. **Folder Organization**: Character animations are organized hierarchically:
+   `/Game/[Category]/[CharacterName]/Animations/[PackName]/`
+4. **Mesh-First Ordering**: Character groups always import Skeletal Meshes first to generate the `Skeleton` before child animations are imported.
+> [!TIP]
+> **Animation Quality Verification**: While AssetPort automates IK Rig characterization, chain mapping, 1:1 finger solvers, and root scaling, characters with drastically different skeletal proportions or highly complex animations may require manual fine-tuning. Always double-check retargeted animations before using them in-game.

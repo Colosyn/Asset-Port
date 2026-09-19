@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+from pathlib import Path
 
 from asset_port.detector import AssetDetector
 from asset_port.models import AssetType, TextureSlot
@@ -7,6 +9,11 @@ from asset_port.models import AssetType, TextureSlot
 class MarketplaceFilenameTests(unittest.TestCase):
     def setUp(self):
         self.detector = AssetDetector()
+    def _detect_mock_fbx(self, name: str, header_bytes: bytes):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / name
+            p.write_bytes(header_bytes)
+            return self.detector.detect_file(p)
 
     def test_prefixless_texture_uses_extension_and_ignores_resolution_token(self):
         asset = self.detector.detect_file("RockCliff_2K_BaseColor.png")
@@ -44,6 +51,14 @@ class MarketplaceFilenameTests(unittest.TestCase):
 
         self.assertEqual(unknown.asset_type, AssetType.UNKNOWN)
         self.assertEqual(self.detector.group_assets([unknown]), [])
+        
+    def test_prefixless_animation_fbx_detected(self):
+        asset = self._detect_mock_fbx("ginga.fbx", b"AnimationStack AnimationCurve")
+        self.assertEqual(asset.asset_type, AssetType.ANIMATION)
+
+    def test_prefixless_skeletal_mesh_fbx_detected(self):
+        asset = self._detect_mock_fbx("bodykun.fbx", b"Geometry Mesh Deformer")
+        self.assertEqual(asset.asset_type, AssetType.SKELETAL_MESH)
 
 
 if __name__ == "__main__":

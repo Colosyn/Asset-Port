@@ -94,6 +94,35 @@ class AssetDetector:
         
         self.regax = re.compile(pattern, re.IGNORECASE)
         
+    def _sanitize_name(self, name: str ) -> str:
+        
+        #Sanitizes spaces, parentheses, and duplicate delimiters using regex.
+        name = re.sub(r"\s*\(\s*(\d+)\s*\)", lambda m: f"_{int(m.group(1)):02d}", name)
+        name = re.sub(r"\s+", "_", name)
+        name = re.sub(r"_{2,}", "_", name)
+        
+        return name.strip("_")
+    
+    def _inspect_fbx_type(self, file_path: Path) -> AssetType:
+        # inspect the starting of FBX file to determine it's AssetType
+        try:
+            with open(file_path, "rb") as f:
+                header = f.read(512 * 1024)
+    
+            has_geom = b"Geometry" in header and b"Mesh" in header
+            has_skin = b"Deformer" in header or b"SubDeformer" in header
+            has_anim = b"AnimationStack" in header or b"AnimationCurve" in header or b"AnimCurve" in header
+        
+            if has_geom and has_skin:
+                return AssetType.SKELETAL_MESH
+            elif not has_geom and has_anim:
+                return AssetType.ANIMATION
+            elif has_geom and not has_skin:
+                return AssetType.STATIC_MESH
+            return AssetType.STATIC_MESH
+        except Exception:
+            return AssetType.STATIC_MESH
+            
     
     def detect_file(self, file_path ) -> DetectedAsset :
         
@@ -103,6 +132,9 @@ class AssetDetector:
         # Keep separately exported Mesh_LOD0.fbx, Mesh_LOD1.fbx, ... in the
         # same asset group without treating the marker as a material token.
         lod_index = None
+        is_loop = False
+        is_in_place = False
+        is_root_motion = False
         if path_obj.suffix.lower() == ".fbx":
             lod_match = re.search(r"_LOD(?P<index>\d+)$", stem, re.IGNORECASE)
             if lod_match:
@@ -111,6 +143,19 @@ class AssetDetector:
                     lod_index = parsed_index
                     stem = stem[:lod_match.start()]
                     # Any index > 7 will leave lod_index =None and prwserve the original stem
+            while True:
+                if m := re.search(r"_(rm|rootmotion)$", stem, re.IGNORECASE):
+                    is_root_motion = True
+                    stem = stem[:m.start()]
+                elif m := re.search(r"_(ip|inplace)$", stem , re.IGNORECASE):
+                    is_in_place = True
+                    stem = stem[:m.start()]
+                elif m := re.search(r"_(loop|lp)$", stem, re.IGNORECASE):
+                    is_loop = True
+                    stem = stem[:m.start()]
+                else:
+                    break
+            
         
         udim_tile = None
         udim_match = re.search(r"_(1[0-9]{3})$", stem)
@@ -118,8 +163,10 @@ class AssetDetector:
             udim_tile = udim_match.group(1)
             stem = stem[:udim_match.start()]
         
+        stem = self._sanitize_name(stem)
+        
         match = self.regax.match(stem)
-        inferred_type = self._infer_type(path_obj.suffix)
+        inferred_type = self._infer_type(path_obj.suffix, path_obj)
         
         if not match:
             return DetectedAsset(
@@ -134,6 +181,9 @@ class AssetDetector:
                 category=None,
                 material_slot_name=None,
                 lod_index=lod_index,
+                is_in_place=is_in_place,
+                is_root_motion=is_root_motion,
+                is_loop=is_loop 
             )
         
         group = match.groupdict()
@@ -160,6 +210,10 @@ class AssetDetector:
         if material_raw and not suffix_raw:
             if material_raw.lower() in SUFFIX_MAP:
                 suffix_raw = material_raw
+                material_raw = None
+            else:
+                # no suffix exists: treat material slot as part of the base name
+                parsed_name = f"{parsed_name}_{material_raw}"
                 material_raw = None
 
         # Marketplace filenames commonly include resolution metadata before the
@@ -196,18 +250,22 @@ class AssetDetector:
             kit_name=kit_name,
             ue_asset_name=ue_asset_name,
             lod_index=lod_index,
+            is_in_place=is_in_place,
+            is_root_motion=is_root_motion,
+            is_loop=is_loop 
         )
         
 
         return detected_asset
 
-    @staticmethod
-    def _infer_type(extension):
+    
+    def _infer_type(self, extension, path_obj):
         extension = extension.lower()
         if extension in (".png", ".tga", ".jpg", ".exr"):
             return AssetType.TEXTURE
         if extension == ".fbx":
-            return AssetType.STATIC_MESH
+            return self._inspect_fbx_type(path_obj)
+            
         return AssetType.UNKNOWN
         
         
@@ -215,46 +273,70 @@ class AssetDetector:
         
         groups = {}
         
-        for asset in assets:
-            if asset.asset_type not in (
-                AssetType.TEXTURE,
-                AssetType.STATIC_MESH,
-                AssetType.SKELETAL_MESH,
-            ):
-                continue
+        non_anims = [a for a in assets if a.asset_type in (AssetType.TEXTURE, AssetType.STATIC_MESH, AssetType.SKELETAL_MESH )]
+        
+        anims = [a for a in assets if a.asset_type == AssetType.ANIMATION]
+        
+        for asset in non_anims:
             if asset.base_name not in groups:
                 groups[asset.base_name] = AssetGroup(
                     base_name= asset.base_name,
-                ) 
-            
+                )
             group = groups[asset.base_name]
             if asset.asset_type == AssetType.TEXTURE:
                 if asset.is_udim and not asset.is_udim_primary:
                     primary = next((t for t in group.texture_list 
-                                    if t.suffix == asset.suffix and
-                                    t.material_slot_name == asset.material_slot_name), None)
+                        if t.suffix == asset.suffix and
+                        t.material_slot_name == asset.material_slot_name), None)
                     if primary:
                         primary.tile_count += 1
                     continue
                 group.texture_list.append(asset)
-                
                 if asset.material_slot_name:
                     if asset.material_slot_name not in group.material_slots:
                         group.material_slots[asset.material_slot_name] = []
                     group.material_slots[asset.material_slot_name].append(asset)
-                
+                            
             elif asset.asset_type in (AssetType.SKELETAL_MESH, AssetType.STATIC_MESH):
                 if asset.lod_index in (None, 0):
-                    # Prefer an unsuffixed base mesh if both it and LOD0 exist.
+                # Prefer an unsuffixed base mesh if both it and LOD0 exist.
                     if group.mesh is None or group.mesh.lod_index == 0:
                         group.mesh = asset
                 else:
                     group.lod_meshes.append(asset)
-                
-            
+                  
             if asset.category:
                 group.category = asset.category
-        
+          
+        chat_candidates = [g for g in groups.values() if g.mesh and g.mesh.asset_type == AssetType.SKELETAL_MESH]
+        chat_candidates.sort(key=lambda g: len(g.base_name), reverse=True)  
+             
+        for anim in anims: 
+            anim_dir = Path(anim.source_path).parent if anim.source_path else None
+            
+            local_chars = [g for g in chat_candidates if g.mesh and Path(g.mesh.source_path).parent == anim_dir]
+            
+            matching_char = next((g for g in chat_candidates if anim.base_name == g.base_name or anim.base_name.startswith(f"{g.base_name}_")),None)
+            
+            if not matching_char and len(local_chars) == 1:
+                matching_char = local_chars[0]
+                
+            if matching_char:
+                matching_char.animation_list.append(anim)
+            else:
+                parent = Path(anim.source_path).parent.name if anim.source_path else ""
+                parent = self._sanitize_name(parent)
+                if parent and parent not in (".","temp","Downloads","Desktop"):
+                    pack_name = parent
+                elif "_" in anim.base_name:
+                    pack_name = anim.base_name.split("_")[0]
+                else:
+                    pack_name = anim.base_name
+                pack_key = pack_name if (pack_name not in groups or groups[pack_name].mesh is None) else f"Anim_{pack_name}"
+                if pack_key not in groups:
+                    groups[pack_key] = AssetGroup(base_name=pack_name, category="Animations")
+                groups[pack_key].animation_list.append(anim)
+                
         for group in groups.values():
             if group.category:
                 if group.mesh:
@@ -263,6 +345,8 @@ class AssetDetector:
                     tex.category = group.category
                 for lod in group.lod_meshes:
                     lod.category = group.category
+                for anim in group.animation_list:
+                    anim.category = group.category
         
         return list(groups.values())
             
