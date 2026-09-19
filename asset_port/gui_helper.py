@@ -130,24 +130,32 @@ def show_skeleton_popup(pack_names, on_confirm_callback):
 def on_skeleton_confirm(pack_names, on_confirm_callback):
     global skeleton_widget
     decisions = {}
-    try:
-        if skeleton_widget:
-            scroll_box = skeleton_widget.get_editor_property("Pack_ScrollBox")
-            rows = [scroll_box.get_child_at(i) for i in range(scroll_box.get_children_count())]
-            for pack_name, row in zip(pack_names, rows):
-                try:
-                    picker = row.get_editor_property("Skeleton_Picker")
-                    if picker:
-                        decisions[pack_name] = picker
-                except Exception as e:
-                    unreal.log_error(f"AssetPort: Error reading skeleton for {pack_name}: {e}")
-    finally:
-        safe_close_tab(SKELETON_ID)
-        on_confirm_callback(decisions)
+    
+    if skeleton_widget:
+        scroll_box = skeleton_widget.get_editor_property("Pack_ScrollBox")
+        rows = [scroll_box.get_child_at(i) for i in range(scroll_box.get_children_count())]
+        for pack_name, row in zip(pack_names, rows):
+            try:
+                picker = row.get_editor_property("Skeleton_Picker")
+                if picker:
+                    decisions[pack_name] = picker
+            except Exception as e:
+                unreal.log_error(f"AssetPort: Error reading skeleton for {pack_name}: {e}")
+    missing = [name for name in pack_names if not decisions.get(name)]
+    if missing:
+        unreal.EditorDialog.show_message(
+            "Asset Port",
+            f"Please assign a target skeleton for: {', '.join(missing)}",
+            unreal.AppMsgType.OK
+        )
+        return
+    
+    safe_close_tab(SKELETON_ID)
+    on_confirm_callback(decisions)
         
 def on_skeleton_cancel(on_confirm_callback):
-    safe_close_tab(SKELETON_ID)
-    on_confirm_callback({})      
+    safe_close_tab(SKELETON_ID) 
+    unreal.log("AssetPort: Animation import cancelled by user.")    
         
 def on_popup_confirm(items, on_confirm_callback):
     global transparency_widget

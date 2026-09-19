@@ -64,6 +64,7 @@ class AssetRouter():
             pack_name = Path(asset.source_path).parent.name if asset.source_path else ""
             if pack_name == ".":
                 pack_name = ""
+            pack_name = pack_name.replace(" ", "_")
             if character_name:
                 is_char_anim = (character_name.lower() in asset.base_name.lower() or (pack_name and pack_name.lower() == character_name.lower()))
             

@@ -442,6 +442,7 @@ class AssetImporter():
                             pack_name = Path(first.source_path).parent.name if first.source_path else ""
                             if pack_name ==".":
                                 pack_name = ""
+                            pack_name = pack_name.replace(" ","_")
                                         
                         if group_anim_objects:
                             retargeted = batch_retarget_animation(retargeter,source_mesh, target_retarget_mesh, group_anim_objects) 
@@ -453,13 +454,14 @@ class AssetImporter():
                             for asset_dat in retargeted:
                                 obj = asset_dat.get_asset()
                                 if obj:
-                                    unreal.EditorAssetLibrary.save_loaded_asset(obj)
                                     clean_name = str(asset_dat.asset_name).replace("RTG_TMP_", "")
                                     dest_path = f"{dest_folder}/{clean_name}"
                                     if unreal.EditorAssetLibrary.does_asset_exist(dest_path):
                                         unreal.EditorAssetLibrary.delete_asset(dest_path)
-                                    if unreal.EditorAssetLibrary.rename_asset(str(asset_dat.package_name), dest_path):
-                                        unreal.EditorAssetLibrary.save_asset(dest_path)
+                                    if unreal.EditorAssetLibrary.rename_loaded_asset(obj, dest_path):
+                                        unreal.EditorAssetLibrary.save_loaded_asset(obj)
+                                    else:
+                                        unreal.log_error(f"AssetPort: Failed to move {clean_name} to {dest_path}")
                                 
                             
         successful_imports = 0
