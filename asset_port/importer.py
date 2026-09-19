@@ -429,18 +429,26 @@ class AssetImporter():
                             report.warnings.append(f"AssetPort: Auto-retarget skipped for {group.base_name} — retargeter setup failed.")
                             continue
                         group_anim_objects = []
+                        
                         for anim_asset, task in anim_task_pairs:
                             if anim_asset in group.animation_list:
                                 for obj in (task.get_objects() or []):
                                     if isinstance(obj, unreal.AnimSequence):
                                         group_anim_objects.append(obj)
                                         
+                        pack_name = ""
+                        if group.animation_list:
+                            first = group.animation_list[0]
+                            pack_name = Path(first.source_path).parent.name if first.source_path else ""
+                            if pack_name ==".":
+                                pack_name = ""
+                                        
                         if group_anim_objects:
                             retargeted = batch_retarget_animation(retargeter,source_mesh, target_retarget_mesh, group_anim_objects) 
                             report.animations_retargeted += len(retargeted)
-                            
                             char_folder = get_character_folder(target_retarget_mesh)
-                            dest_folder = f"{char_folder}/Animations/{group.base_name}"
+                            subfolder = pack_name if (pack_name and pack_name.lower() != group.base_name.lower()) else group.base_name
+                            dest_folder = f"{char_folder}/Animations/{subfolder}"
                             unreal.EditorAssetLibrary.make_directory(dest_folder)
                             for asset_dat in retargeted:
                                 obj = asset_dat.get_asset()

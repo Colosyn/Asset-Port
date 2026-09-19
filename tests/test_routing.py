@@ -22,12 +22,37 @@ class RouterTests(unittest.TestCase):
         self.assertTrue(path.endswith("A_ginga"))
         
         char_folder, _ = self.router.get_folder_path(anim, character_name="Ninja")
-        self.assertEqual(char_folder, "/Game/Characters/Ninja/Animations")
+        self.assertEqual(char_folder, "/Game/_Unsorted/Ninja/Animations/Capoeira")
         
         retarget_folder, _ = self.router.get_folder_path(
-            anim, character_name="Mannequin", is_retargeted=True
-        )
-        self.assertEqual(retarget_folder, "/Game/Characters/Mannequin/Animations/Capoeira")
+        anim, character_name="Mannequin", is_retargeted=True)
+        self.assertEqual(retarget_folder, "/Game/_Unsorted/Mannequin/Animations/Capoeira")
+        anim_knight = DetectedAsset(
+                                   filename="A_Knight_walk.fbx",
+                                   source_path="D:/Characters/Knight/A_Knight_walk.fbx",
+                                   prefix="", base_name="A_Knight_walk", suffix="",
+                                   asset_type=AssetType.ANIMATION, texture_slot=None, extension=".fbx",
+                                   )
+        f, _ = self.router.get_folder_path(anim_knight, character_name="Knight")
+        self.assertEqual(f, "/Game/Characters/Knight/Animations")
+
+        anim_zombie = DetectedAsset(
+                                    filename="A_zombie.fbx",
+                                    source_path="D:/Characters/ZombiePack/A_zombie.fbx",
+                                    prefix="", base_name="A_zombie", suffix="",
+                                    asset_type=AssetType.ANIMATION, texture_slot=None, extension=".fbx",
+                                    )
+        f, _ = self.router.get_folder_path(anim_zombie, character_name="Knight")
+        self.assertEqual(f, "/Game/Characters/Knight/Animations/ZombiePack")
+
+        anim_idle = DetectedAsset(
+                                filename="A_idle.fbx",
+                                source_path="D:/Knight/A_idle.fbx",
+                                prefix="", base_name="A_idle", suffix="",
+                                asset_type=AssetType.ANIMATION, texture_slot=None, extension=".fbx",
+                                )
+        f, _ = self.router.get_folder_path(anim_idle, character_name="Knight")
+        self.assertEqual(f, "/Game/_Unsorted/Knight/Animations")
     def test_canonical_prefixes_for_prefixless_assets(self):
         mesh = DetectedAsset(
             filename="Rock.fbx",
