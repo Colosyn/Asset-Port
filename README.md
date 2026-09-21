@@ -1,6 +1,6 @@
 # AssetPort
 
-An automated, pipeline-friendly batch importer and organizer for **Unreal Engine 5** using Python and Editor Utility Widgets. Stop importing meshes and textures one-by-one; AssetPort automates category routing, texture settings configuration, material instance generation, and mesh linkage in a single click.
+An automated, pipeline-friendly batch importer and organizer for **Unreal Engine 5** built around standard studio naming conventions. Stop importing assets one-by-one; AssetPort automates category routing, texture configuration, material instance generation, Smart Nanite evaluation, and one-click animation import with automatic retargeting to any project character.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Unreal Engine Version](https://img.shields.io/badge/Unreal%20Engine-5.4%2B%20Supported-blue)](https://www.unrealengine.com/)
@@ -38,7 +38,7 @@ An automated, pipeline-friendly batch importer and organizer for **Unreal Engine
 * **📐 Static Mesh LOD Import**: Imports LOD groups embedded in one FBX and attaches separately exported `_LOD0`, `_LOD1`, ... FBX files to regular or Atlas Static Meshes.
 * **⚡ Smart Nanite Automation**: Intelligently evaluates mesh polygon counts against a configurable threshold (default: 2,500 triangles). Automatically enables Nanite for dense opaque meshes while preserving traditional LOD chains and non-Nanite transparent materials.
 * **🎬 Smart Animation Ingestion**: Auto-detects animation FBX files (`a_`, `anim_`, or prefix-less tracks), enforces mesh-first ordering so skeletons bind cleanly, and extracts tokens like `_RM` to auto-enable Root Motion. Launches an interactive dialog (`EUW_SkeletonSetup`) to map standalone animation packs to existing project skeletons.
-* **🔄 Automated IK Retargeting**: Instantly transfers imported animations onto Manny, Quinn, or any project character with zero manual setup. Automatically generates IK Rigs, maps bone chains, and provisions retargeters on the fly. Ensures natural finger posing with no twisted knuckles and dynamically scales character height to eliminate foot sliding and floor clipping.
+* **🔄 Automated IK Retargeting**: Instantly transfers imported animations onto Manny, Quinn, or any project character with zero manual setup. Automatically generates IK Rigs, maps bone chains, and recognizes **23 industry rig types** out of the box ([see full supported rig list](CONVENTIONS.md#91-supported-rig-templates-auto-characterization)). Ensures natural finger posing with no twisted knuckles and dynamically scales character height to eliminate foot sliding and floor clipping.
 
 ---
 

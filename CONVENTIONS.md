@@ -38,7 +38,7 @@ Texture: [Prefix]_[Category]_[KitName]_[Suffix].[extension]
 ### Animation Assets:
 ```text
 [Prefix]_[Category]_[BaseName]_[AnimName]_[Token].[extension]
-
+```
 *Example*: `A_char_Manny_Run_RM.fbx`, `Anim_Zombie_Walk_Loop.fbx`, or `A_Jump_IP.fbx`.
 ---
 
@@ -189,3 +189,14 @@ When `"smart_nanite": true` is enabled in `importer_config.json`:
 4. **Mesh-First Ordering**: Character groups always import Skeletal Meshes first to generate the `Skeleton` before child animations are imported.
 > [!TIP]
 > **Animation Quality Verification**: While AssetPort automates IK Rig characterization, chain mapping, 1:1 finger solvers, and root scaling, characters with drastically different skeletal proportions or highly complex animations may require manual fine-tuning. Always double-check retargeted animations before using them in-game.
+
+### 9.1 Supported Rig Templates (Auto-Characterization)
+AssetPort utilizes Unreal Engine's native `IKRigAutoCharacterizer` solver. When an animation or skeletal mesh is ingested, the engine automatically strips common prefixes (e.g., `mixamorig:`, `b_`) and matches the bone topology against 23 built-in industry rig templates without requiring manual bone remapping:
+| Category | Supported Rig Templates |
+| :--- | :--- |
+| **DCC & Game Rigs** | **UE5 Mannequin** (`Manny`, `Quinn`), **UE4 Mannequin**, **Mixamo Standard Biped**, **Blender Rigify** (`metarig`), **Daz 3D** (Genesis 8/9), **Reallusion Character Creator 4 (CC4)**, **mGear** (Maya), **HumanIK / MotionBuilder**, **Advanced Skeleton** (Maya), **Meshcapade** (SMPL / SMPL-X) |
+| **Motion Capture Systems** | **OptiTrack / Motive**, **Xsens** (MVN Awinda / Link), **Vicon** (Blade / Shogun), **Rokoko** (Smartsuit Pro), **Sony Mocopi**, **Move One** (Move.ai), **Qualisys** |
+| **Epic & Creature Rigs** | **Fortnite Humanoid**, **Fortnite Biped**, **FN Quadruped** (4-legged mammals), **FN Raptor** (bipedal dinosaurs), **FN Amphibian**, **FN Buttercake** (multi-limb giant creatures) |
+
+> [!NOTE]
+> Custom humanoid skeletons with additional twist bones, facial joints, or prop attachments will still auto-characterize cleanly as long as the core biped limbs align with a standard template.
